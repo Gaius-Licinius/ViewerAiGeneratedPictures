@@ -27,13 +27,25 @@ class App {
 
   /* ── Initialization ── */
   async init() {
+    this.showSpinner();
     await this.loadIndex();
     this.detectNsfw();
     this.populateModelFilter();
     this.applyFilters();
-    this.renderCurrentMode();
+    this.setMode(this.currentMode);
     this.bindEvents();
     this.setupAutoHide();
+    this.hideSpinner();
+  }
+
+  showSpinner() {
+    const spinner = document.getElementById('spinner');
+    if (spinner) spinner.classList.remove('hidden');
+  }
+
+  hideSpinner() {
+    const spinner = document.getElementById('spinner');
+    if (spinner) spinner.classList.add('hidden');
   }
 
   formatDateLabel(folder) {
@@ -127,10 +139,7 @@ class App {
 
   /* ── Mode switching ── */
   renderCurrentMode() {
-    switch (this.currentMode) {
-      case 'wall': this.renderWall(); break;
-      case 'grid': this.renderGrid(); break;
-    }
+    this.setMode(this.currentMode);
   }
 
   setMode(mode) {
@@ -240,73 +249,6 @@ class App {
     }
   }
 
-  renderWall() {
-    // wall is rendered incrementally via renderWallPage
-  }
-
-  /* ── Grid ── */
-  renderGrid() {
-    const viewer = document.getElementById('viewer');
-    viewer.innerHTML = '';
-    const container = document.createElement('div');
-    container.className = 'grid-container';
-    viewer.appendChild(container);
-
-    this.gridObserver = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          const el = entry.target;
-          const idx = parseInt(el.dataset.index);
-          const img = this.filteredImages[idx];
-          if (img && !el.querySelector('img').src) {
-            el.querySelector('img').src = `/images/${img.rel_path}`;
-          }
-          this.gridObserver.unobserve(el);
-        }
-      }
-    }, { rootMargin: '200px' });
-
-    let lastGroup = null;
-
-    for (let i = 0; i < this.filteredImages.length; i++) {
-      const img = this.filteredImages[i];
-
-      // Insert date separator when month-year changes
-      const group = img.folder ? img.folder.substring(0, 7) : null;
-      if (group && group !== lastGroup) {
-        container.appendChild(this.makeDateSeparator(this.formatDateLabel(img.folder)));
-        lastGroup = group;
-      }
-
-      const item = document.createElement('div');
-      item.className = 'grid-item';
-      if (this.favorites.has(img.id)) item.classList.add('favorited');
-      item.dataset.id = img.id;
-      item.dataset.index = i;
-
-      const imgEl = document.createElement('img');
-      imgEl.alt = img.prompt ? img.prompt.substring(0, 100) : '';
-      // src set via observer
-
-      const favIcon = document.createElement('span');
-      favIcon.className = 'fav-indicator';
-      favIcon.textContent = this.favorites.has(img.id) ? '\u2665' : '\u2661';
-      favIcon.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.toggleFavorite(img.id);
-        favIcon.textContent = this.favorites.has(img.id) ? '\u2665' : '\u2661';
-        item.classList.toggle('favorited', this.favorites.has(img.id));
-      });
-
-      item.appendChild(imgEl);
-      item.appendChild(favIcon);
-      item.addEventListener('click', () => this.openFullscreen(i));
-      container.appendChild(item);
-
-      this.gridObserver.observe(item);
-    }
-  }
-
   /* ── Fullscreen ── */
   openFullscreen(filteredIndex) {
     this.fsIndex = filteredIndex;
@@ -333,11 +275,58 @@ class App {
       fsImg.onload = () => { fsImg.style.opacity = '1'; };
     }, 150);
 
-    document.getElementById('fs-prompt').textContent = img.prompt || 'No prompt';
-    document.getElementById('fs-model').textContent = img.model || 'Unknown model';
-
     const favBtn = document.getElementById('fs-fav');
     favBtn.classList.toggle('active', this.favorites.has(img.id));
+  }
+
+  openInfoPopup(img) {
+    const popup = document.getElementById('details-popup');
+    const content = document.getElementById('details-content');
+    if (!popup || !content) return;
+
+    const info = img || this.filteredImages[this.fsIndex];
+    if (!info) return;
+
+    const fields = [
+      ['Model', info.model],
+      ['Steps', info.steps],
+      ['Sampler', info.sampler],
+      ['CFG Scale', info.cfg_scale],
+      ['Seed', info.seed],
+      ['Size', info.size],
+      ['Model Hash', info.model_hash],
+      ['Version', info.version],
+      ['File', info.rel_path],
+      ['Folder', info.folder],
+    ].filter(([, v]) => v);
+
+    let html = '<h3>Prompt</h3>';
+    html += `<div class="detail-prompt">${this.escHtml(info.prompt || '—')}</div>`;
+
+    if (info.negative_prompt) {
+      html += '<h3>Negative Prompt</h3>';
+      html += `<div class="detail-neg">${this.escHtml(info.negative_prompt)}</div>`;
+    }
+
+    html += '<h3>Parameters</h3><div class="detail-grid">';
+    for (const [key, val] of fields) {
+      html += `<span class="key">${key}</span><span class="val">${this.escHtml(val)}</span>`;
+    }
+    html += '</div>';
+
+    content.innerHTML = html;
+    popup.classList.remove('hidden');
+  }
+
+  closeInfoPopup() {
+    const popup = document.getElementById('details-popup');
+    if (popup) popup.classList.add('hidden');
+  }
+
+  escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
   }
 
   renderFilmstrip() {
@@ -415,12 +404,18 @@ class App {
     document.getElementById('btn-grid').addEventListener('click', () => this.setMode('grid'));
 
     document.getElementById('fs-close').addEventListener('click', () => this.closeFullscreen());
+    document.getElementById('fs-info').addEventListener('click', () => this.openInfoPopup());
     document.getElementById('fs-fav').addEventListener('click', () => {
       const img = this.filteredImages[this.fsIndex];
       if (img) {
         this.toggleFavorite(img.id);
         document.getElementById('fs-fav').classList.toggle('active', this.favorites.has(img.id));
       }
+    });
+
+    document.getElementById('details-close').addEventListener('click', () => this.closeInfoPopup());
+    document.getElementById('details-popup').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('details-popup')) this.closeInfoPopup();
     });
 
     document.addEventListener('keydown', (e) => {

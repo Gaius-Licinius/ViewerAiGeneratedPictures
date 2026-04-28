@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="spinner"><div class="spinner-ring"></div></div>
 <div id="app">
   <!-- Controls overlay (glass panel, auto-hides) -->
   <div id="controls" class="glass-panel">
@@ -41,17 +42,22 @@
 
   <!-- Fullscreen overlay -->
   <div id="fullscreen-overlay" class="fullscreen-overlay hidden">
-    <div class="fullscreen-glass glass-panel">
-      <div class="fullscreen-info">
-        <span id="fs-prompt"></span>
-        <span id="fs-model"></span>
-      </div>
-      <button id="fs-fav" class="fav-btn" title="Favorite">&#9829;</button>
-      <button id="fs-close" class="close-btn" title="Close (Esc)">&times;</button>
+    <div class="fullscreen-top glass-panel">
+      <button id="fs-info" class="fs-icon-btn" title="Image details">&#9432;</button>
+      <button id="fs-fav" class="fs-icon-btn" title="Favorite">&#9829;</button>
+      <button id="fs-close" class="fs-icon-btn" title="Close (Esc)">&times;</button>
     </div>
     <img id="fs-image" class="fullscreen-image" src="" alt="">
     <div id="filmstrip" class="filmstrip glass-panel">
       <div id="filmstrip-inner" class="filmstrip-inner"></div>
+    </div>
+  </div>
+
+  <!-- Details popup -->
+  <div id="details-popup" class="details-popup hidden">
+    <div class="details-card glass-panel">
+      <button id="details-close" class="fs-icon-btn" title="Close">&times;</button>
+      <div id="details-content"></div>
     </div>
   </div>
 </div>
