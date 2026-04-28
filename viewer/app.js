@@ -317,13 +317,11 @@ class App {
       ['Folder', info.folder],
     ].filter(([, v]) => v);
 
-    let html = '<h3>Prompt</h3>';
+    let html = '<h3>Positive Prompt</h3>';
     html += `<div class="detail-prompt">${this.escHtml(info.prompt || '—')}</div>`;
 
-    if (info.negative_prompt) {
-      html += '<h3>Negative Prompt</h3>';
-      html += `<div class="detail-neg">${this.escHtml(info.negative_prompt)}</div>`;
-    }
+    html += '<h3>Negative Prompt</h3>';
+    html += `<div class="detail-neg">${this.escHtml(info.negative_prompt || '—')}</div>`;
 
     html += '<h3>Parameters</h3><div class="detail-grid">';
     for (const [key, val] of fields) {

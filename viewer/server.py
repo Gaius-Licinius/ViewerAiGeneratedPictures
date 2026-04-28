@@ -184,30 +184,74 @@ def parse_comfyui_json(raw):
     steps = ""
     seed = ""
 
-    for _node_id, node in wf.items():
+    # Find KSampler to trace positive/negative node connections
+    ksampler = None
+    for node_id, node in wf.items():
+        if not isinstance(node, dict):
+            continue
+        if node.get("class_type") == "KSampler":
+            ksampler = (node_id, node)
+            break
+
+    # Collect all CLIPTextEncode nodes indexed by node_id
+    clips = {}
+    for node_id, node in wf.items():
         if not isinstance(node, dict):
             continue
         ct = node.get("class_type", "")
         if ct == "CLIPTextEncode":
+            clips[node_id] = node
+
+    if ksampler:
+        _ks_id, ks_node = ksampler
+        inputs = ks_node.get("inputs", {})
+
+        # Trace positive prompt connection
+        pos_conn = inputs.get("positive")
+        if pos_conn and isinstance(pos_conn, list) and len(pos_conn) > 0:
+            pos_node_id = pos_conn[0]
+            if pos_node_id in clips:
+                pos_prompt = clips[pos_node_id].get("inputs", {}).get("text", "")
+            else:
+                pos_prompt = resolve_clip_text(wf, pos_node_id)
+
+        # Trace negative prompt connection
+        neg_conn = inputs.get("negative")
+        if neg_conn and isinstance(neg_conn, list) and len(neg_conn) > 0:
+            neg_node_id = neg_conn[0]
+            if neg_node_id in clips:
+                neg_prompt = clips[neg_node_id].get("inputs", {}).get("text", "")
+            else:
+                neg_prompt = resolve_clip_text(wf, neg_node_id)
+
+        sampler = inputs.get("sampler_name", "")
+        cfg_val = inputs.get("cfg")
+        steps_val = inputs.get("steps")
+        seed_val = inputs.get("seed")
+        if cfg_val is not None:
+            cfg = str(cfg_val)
+        if steps_val is not None:
+            steps = str(steps_val)
+        if seed_val is not None:
+            seed = str(seed_val)
+
+    # Fallback: use _meta.title if KSampler trace didn't find clips
+    if not pos_prompt and not neg_prompt:
+        for node in clips.values():
             title = node.get("_meta", {}).get("title", "")
             text = node.get("inputs", {}).get("text", "")
             if "Negative" in title:
-                neg_prompt = text
+                neg_prompt = neg_prompt or text
             else:
-                pos_prompt = text
-        elif ct in ("CheckpointLoaderSimple", "CheckpointLoader"):
-            model_name = node.get("inputs", {}).get("ckpt_name", "")
-        elif ct == "KSampler":
-            sampler = node.get("inputs", {}).get("sampler_name", "")
-            cfg_val = node.get("inputs", {}).get("cfg")
-            steps_val = node.get("inputs", {}).get("steps")
-            seed_val = node.get("inputs", {}).get("seed")
-            if cfg_val is not None:
-                cfg = str(cfg_val)
-            if steps_val is not None:
-                steps = str(steps_val)
-            if seed_val is not None:
-                seed = str(seed_val)
+                pos_prompt = pos_prompt or text
+
+    # Model from checkpoint loaders
+    for node in wf.values():
+        if not isinstance(node, dict):
+            continue
+        ct = node.get("class_type", "")
+        if ct in ("CheckpointLoaderSimple", "CheckpointLoader"):
+            model_name = node.get("inputs", {}).get("ckpt_name", "") or model_name
 
     if not pos_prompt and not neg_prompt:
         return None
@@ -224,6 +268,24 @@ def parse_comfyui_json(raw):
         "model_hash": "",
         "version": "",
     }
+
+
+def resolve_clip_text(wf, node_id):
+    """Trace through intermediate nodes (like wildcard/conditioning) to find CLIPTextEncode text."""
+    node = wf.get(node_id)
+    if not isinstance(node, dict):
+        return ""
+    ct = node.get("class_type", "")
+    if ct == "CLIPTextEncode":
+        return node.get("inputs", {}).get("text", "")
+    # Try tracing through common intermediate nodes
+    for key in ("positive", "text", "clip", "conditioning"):
+        conn = node.get("inputs", {}).get(key)
+        if isinstance(conn, list) and len(conn) > 0:
+            text = resolve_clip_text(wf, conn[0])
+            if text:
+                return text
+    return ""
 
 
 def parse_novelai(chunks):
