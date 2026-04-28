@@ -10,13 +10,7 @@ class App {
     this.hideTimer = null;
     this.wallContainer = null;
     this.gridObserver = null;
-
-    this.nsfwKeywords = [
-      'nsfw', 'nude', 'naked', 'explicit', 'porn', 'hentai',
-      'erotic', 'lewd', 'adult', 'nsfw,', 'xxx', 'sex',
-      'uncensored', 'topless', 'lingerie', 'bikini', 'nsfw-art',
-      'penis', 'fellatio', 'rape', 'cum', 'precum', 'cock'
-    ];
+    this.nsfwKeywords = [];
 
     this.init();
   }
@@ -25,6 +19,7 @@ class App {
   async init() {
     try {
       this.showSpinner();
+      await this.loadConfig();
       await this.loadIndex();
       this.detectNsfw();
       this.populateModelFilter();
@@ -47,6 +42,16 @@ class App {
   hideSpinner() {
     const spinner = document.getElementById('spinner');
     if (spinner) spinner.classList.add('hidden');
+  }
+
+  async loadConfig() {
+    try {
+      const res = await fetch('config.json');
+      const cfg = await res.json();
+      this.nsfwKeywords = cfg.nsfw_keywords || [];
+    } catch (err) {
+      console.error('Failed to load config:', err);
+    }
   }
 
   formatDateLabel(folder) {

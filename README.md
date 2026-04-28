@@ -19,4 +19,4 @@ python server.py
 
 Open `http://localhost:8080` in your browser.
 
-Configure the image collection directory by setting `COLLECTION_ROOT` in `viewer/server.py`.
+Edit `viewer/config.json` to change the collection path and NSFW keywords.

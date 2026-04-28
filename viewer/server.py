@@ -9,11 +9,22 @@ import pathlib
 import urllib.parse
 import threading
 
-COLLECTION_ROOT = r"C:\IA\Collection"
+COLLECTION_ROOT = None
 VIEWER_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(VIEWER_DIR, "config.json")
 INDEX_FILE = os.path.join(VIEWER_DIR, "index.json")
 PORT = 8080
 HOST = "0.0.0.0"
+
+
+def load_config():
+    global COLLECTION_ROOT
+    try:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+        COLLECTION_ROOT = cfg.get("collection_root", r"C:\IA\Collection")
+    except Exception:
+        COLLECTION_ROOT = r"C:\IA\Collection"
 
 
 class ViewerHandler(http.server.SimpleHTTPRequestHandler):
@@ -435,6 +446,8 @@ def index_needs_update(collection_root, index_path):
 
 
 def main():
+    load_config()
+
     print("AI Image Viewer — starting...")
     print(f"  Collection: {COLLECTION_ROOT}")
 
