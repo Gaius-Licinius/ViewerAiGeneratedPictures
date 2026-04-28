@@ -1,0 +1,397 @@
+'use strict';
+
+class App {
+  constructor() {
+    this.images = [];
+    this.filteredImages = [];
+    this.favorites = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
+    this.currentMode = 'wall';
+    this.fsIndex = -1;
+    this.hideTimer = null;
+    this.wallObserver = null;
+    this.wallItemPool = [];
+    this.wallSentinel = null;
+    this.wallPage = 0;
+    this.WALL_PAGE_SIZE = 60;
+    this.wallContainer = null;
+    this.renderedWallIds = new Set();
+
+    this.nsfwKeywords = [
+      'nsfw', 'nude', 'naked', 'explicit', 'porn', 'hentai',
+      'erotic', 'lewd', 'adult', 'nsfw,', 'xxx', 'sex',
+      'uncensored', 'topless', 'lingerie', 'bikini', 'nsfw-art'
+    ];
+
+    this.init();
+  }
+
+  /* ── Initialization ── */
+  async init() {
+    await this.loadIndex();
+    this.detectNsfw();
+    this.populateModelFilter();
+    this.applyFilters();
+    this.renderCurrentMode();
+    this.bindEvents();
+    this.setupAutoHide();
+  }
+
+  async loadIndex() {
+    try {
+      const res = await fetch('index.json');
+      this.images = await res.json();
+      console.log(`Loaded ${this.images.length} images`);
+    } catch (err) {
+      console.error('Failed to load index.json:', err);
+      this.images = [];
+    }
+  }
+
+  detectNsfw() {
+    const lowerKeywords = this.nsfwKeywords.map(k => k.toLowerCase());
+    for (const img of this.images) {
+      const prompt = (img.prompt || '').toLowerCase();
+      const negPrompt = (img.negative_prompt || '').toLowerCase();
+      const combined = prompt + ' ' + negPrompt;
+      img.nsfw = lowerKeywords.some(kw => combined.includes(kw));
+    }
+  }
+
+  populateModelFilter() {
+    const models = [...new Set(this.images.map(i => i.model).filter(Boolean))].sort();
+    const select = document.getElementById('model-filter');
+    for (const m of models) {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      select.appendChild(opt);
+    }
+  }
+
+  /* ── Filters ── */
+  applyFilters() {
+    const search = (document.getElementById('search').value || '').toLowerCase();
+    const model = document.getElementById('model-filter').value;
+    const showNsfw = document.getElementById('nsfw-toggle').checked;
+    const favOnly = document.getElementById('fav-toggle').checked;
+
+    this.filteredImages = this.images.filter(img => {
+      if (search && !(img.prompt || '').toLowerCase().includes(search)) return false;
+      if (model && img.model !== model) return false;
+      if (!showNsfw && img.nsfw) return false;
+      if (favOnly && !this.favorites.has(img.id)) return false;
+      return true;
+    });
+
+    document.getElementById('image-count').textContent =
+      `${this.filteredImages.length} / ${this.images.length} images`;
+  }
+
+  onFilterChange() {
+    this.applyFilters();
+    this.resetRendering();
+    this.renderCurrentMode();
+  }
+
+  resetRendering() {
+    this.wallPage = 0;
+    this.renderedWallIds.clear();
+    if (this.wallContainer) {
+      this.wallContainer.innerHTML = '';
+      this.addWallSentinel();
+    }
+  }
+
+  /* ── Mode switching ── */
+  renderCurrentMode() {
+    switch (this.currentMode) {
+      case 'wall': this.renderWall(); break;
+      case 'grid': this.renderGrid(); break;
+    }
+  }
+
+  setMode(mode) {
+    this.currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn-${mode}`).classList.add('active');
+
+    const viewer = document.getElementById('viewer');
+    viewer.innerHTML = '';
+
+    this.resetRendering();
+    if (mode === 'wall') {
+      this.wallContainer = document.createElement('div');
+      this.wallContainer.className = 'wall-container';
+      viewer.appendChild(this.wallContainer);
+      this.wallContainer.addEventListener('scroll', () => this.onWallScroll());
+      this.addWallSentinel();
+      this.renderWallPage();
+      this.setupWallObserver();
+    } else if (mode === 'grid') {
+      this.renderGrid();
+    }
+  }
+
+  /* ── Infinite Wall ── */
+  addWallSentinel() {
+    if (!this.wallContainer) return;
+    this.wallSentinel = document.createElement('div');
+    this.wallSentinel.className = 'wall-sentinel';
+    this.wallSentinel.style.height = '1px';
+    this.wallContainer.appendChild(this.wallSentinel);
+  }
+
+  setupWallObserver() {
+    if (this.wallObserver) this.wallObserver.disconnect();
+    this.wallObserver = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        this.renderWallPage();
+      }
+    }, { root: this.wallContainer, rootMargin: '400px' });
+  }
+
+  onWallScroll() {
+    if (!this.wallSentinel || !this.wallObserver) return;
+    this.wallObserver.disconnect();
+    this.wallObserver.observe(this.wallSentinel);
+  }
+
+  renderWallPage() {
+    const start = this.wallPage * this.WALL_PAGE_SIZE;
+    const end = Math.min(start + this.WALL_PAGE_SIZE, this.filteredImages.length);
+    if (start >= this.filteredImages.length) return;
+
+    for (let i = start; i < end; i++) {
+      const img = this.filteredImages[i];
+      if (this.renderedWallIds.has(img.id)) continue;
+      this.renderedWallIds.add(img.id);
+
+      const item = document.createElement('div');
+      item.className = 'wall-item';
+      if (this.favorites.has(img.id)) item.classList.add('favorited');
+      item.dataset.id = img.id;
+      item.dataset.index = i;
+
+      const imgEl = document.createElement('img');
+      imgEl.loading = 'lazy';
+      imgEl.src = `/images/${img.rel_path}`;
+      imgEl.alt = img.prompt ? img.prompt.substring(0, 100) : '';
+
+      const favIcon = document.createElement('span');
+      favIcon.className = 'fav-indicator';
+      favIcon.textContent = this.favorites.has(img.id) ? '\u2665' : '\u2661';
+      favIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleFavorite(img.id);
+        favIcon.textContent = this.favorites.has(img.id) ? '\u2665' : '\u2661';
+        item.classList.toggle('favorited', this.favorites.has(img.id));
+      });
+
+      item.appendChild(imgEl);
+      item.appendChild(favIcon);
+      item.addEventListener('click', () => this.openFullscreen(i));
+
+      this.wallContainer.insertBefore(item, this.wallSentinel);
+    }
+
+    this.wallPage++;
+
+    if (end < this.filteredImages.length) {
+      this.wallObserver.observe(this.wallSentinel);
+    }
+  }
+
+  renderWall() {
+    // wall is rendered incrementally via renderWallPage
+  }
+
+  /* ── Grid ── */
+  renderGrid() {
+    const viewer = document.getElementById('viewer');
+    viewer.innerHTML = '';
+    const container = document.createElement('div');
+    container.className = 'grid-container';
+    viewer.appendChild(container);
+
+    this.gridObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const idx = parseInt(el.dataset.index);
+          const img = this.filteredImages[idx];
+          if (img && !el.querySelector('img').src) {
+            el.querySelector('img').src = `/images/${img.rel_path}`;
+          }
+          this.gridObserver.unobserve(el);
+        }
+      }
+    }, { rootMargin: '200px' });
+
+    for (let i = 0; i < this.filteredImages.length; i++) {
+      const img = this.filteredImages[i];
+      const item = document.createElement('div');
+      item.className = 'grid-item';
+      if (this.favorites.has(img.id)) item.classList.add('favorited');
+      item.dataset.id = img.id;
+      item.dataset.index = i;
+
+      const imgEl = document.createElement('img');
+      imgEl.alt = img.prompt ? img.prompt.substring(0, 100) : '';
+      // src set via observer
+
+      const favIcon = document.createElement('span');
+      favIcon.className = 'fav-indicator';
+      favIcon.textContent = this.favorites.has(img.id) ? '\u2665' : '\u2661';
+      favIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleFavorite(img.id);
+        favIcon.textContent = this.favorites.has(img.id) ? '\u2665' : '\u2661';
+        item.classList.toggle('favorited', this.favorites.has(img.id));
+      });
+
+      item.appendChild(imgEl);
+      item.appendChild(favIcon);
+      item.addEventListener('click', () => this.openFullscreen(i));
+      container.appendChild(item);
+
+      this.gridObserver.observe(item);
+    }
+  }
+
+  /* ── Fullscreen ── */
+  openFullscreen(filteredIndex) {
+    this.fsIndex = filteredIndex;
+    const overlay = document.getElementById('fullscreen-overlay');
+    overlay.classList.remove('hidden');
+    this.updateFullscreen();
+    this.renderFilmstrip();
+    document.body.style.cursor = 'default';
+  }
+
+  closeFullscreen() {
+    document.getElementById('fullscreen-overlay').classList.add('hidden');
+    this.fsIndex = -1;
+  }
+
+  updateFullscreen() {
+    const img = this.filteredImages[this.fsIndex];
+    if (!img) return;
+
+    const fsImg = document.getElementById('fs-image');
+    fsImg.style.opacity = '0';
+    setTimeout(() => {
+      fsImg.src = `/images/${img.rel_path}`;
+      fsImg.onload = () => { fsImg.style.opacity = '1'; };
+    }, 150);
+
+    document.getElementById('fs-prompt').textContent = img.prompt || 'No prompt';
+    document.getElementById('fs-model').textContent = img.model || 'Unknown model';
+
+    const favBtn = document.getElementById('fs-fav');
+    favBtn.classList.toggle('active', this.favorites.has(img.id));
+  }
+
+  renderFilmstrip() {
+    const inner = document.getElementById('filmstrip-inner');
+    inner.innerHTML = '';
+
+    const start = Math.max(0, this.fsIndex - 10);
+    const end = Math.min(this.filteredImages.length, this.fsIndex + 11);
+
+    for (let i = start; i < end; i++) {
+      const img = this.filteredImages[i];
+      const thumb = document.createElement('img');
+      thumb.className = 'filmstrip-thumb';
+      if (i === this.fsIndex) thumb.classList.add('active');
+      thumb.src = `/images/${img.rel_path}`;
+      thumb.title = img.prompt ? img.prompt.substring(0, 60) : '';
+      thumb.addEventListener('click', () => {
+        this.fsIndex = i;
+        this.updateFullscreen();
+        this.renderFilmstrip();
+      });
+      inner.appendChild(thumb);
+    }
+
+    // scroll active thumb into view
+    const active = inner.querySelector('.filmstrip-thumb.active');
+    if (active) {
+      active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }
+
+  navigateFullscreen(direction) {
+    const newIdx = this.fsIndex + direction;
+    if (newIdx < 0 || newIdx >= this.filteredImages.length) return;
+    this.fsIndex = newIdx;
+    this.updateFullscreen();
+    this.renderFilmstrip();
+  }
+
+  /* ── Favorites ── */
+  toggleFavorite(id) {
+    if (this.favorites.has(id)) {
+      this.favorites.delete(id);
+    } else {
+      this.favorites.add(id);
+    }
+    localStorage.setItem('favorites', JSON.stringify([...this.favorites]));
+  }
+
+  /* ── Auto-hide controls ── */
+  setupAutoHide() {
+    const controls = document.getElementById('controls');
+    const showControls = () => {
+      controls.classList.remove('hidden');
+      clearTimeout(this.hideTimer);
+      this.hideTimer = setTimeout(() => {
+        controls.classList.add('hidden');
+      }, 3000);
+    };
+
+    document.addEventListener('mousemove', showControls);
+    document.addEventListener('click', showControls);
+    document.addEventListener('keydown', showControls);
+    showControls();
+  }
+
+  /* ── Events ── */
+  bindEvents() {
+    document.getElementById('search').addEventListener('input', () => this.onFilterChange());
+    document.getElementById('model-filter').addEventListener('change', () => this.onFilterChange());
+    document.getElementById('nsfw-toggle').addEventListener('change', () => this.onFilterChange());
+    document.getElementById('fav-toggle').addEventListener('change', () => this.onFilterChange());
+
+    document.getElementById('btn-wall').addEventListener('click', () => this.setMode('wall'));
+    document.getElementById('btn-grid').addEventListener('click', () => this.setMode('grid'));
+
+    document.getElementById('fs-close').addEventListener('click', () => this.closeFullscreen());
+    document.getElementById('fs-fav').addEventListener('click', () => {
+      const img = this.filteredImages[this.fsIndex];
+      if (img) {
+        this.toggleFavorite(img.id);
+        document.getElementById('fs-fav').classList.toggle('active', this.favorites.has(img.id));
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (this.fsIndex >= 0) {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); this.navigateFullscreen(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); this.navigateFullscreen(1); }
+        if (e.key === 'Escape') { e.preventDefault(); this.closeFullscreen(); }
+      }
+    });
+
+    // Click on fullscreen background to close
+    document.getElementById('fullscreen-overlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('fullscreen-overlay')) {
+        this.closeFullscreen();
+      }
+    });
+  }
+}
+
+// Boot
+document.addEventListener('DOMContentLoaded', () => {
+  new App();
+});

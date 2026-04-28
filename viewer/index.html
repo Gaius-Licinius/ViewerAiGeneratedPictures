@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Image Viewer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- Controls overlay (glass panel, auto-hides) -->
+  <div id="controls" class="glass-panel">
+    <div class="controls-top">
+      <input type="text" id="search" placeholder="Search prompts..." class="glass-input">
+      <select id="model-filter" class="glass-input">
+        <option value="">All models</option>
+      </select>
+      <label class="toggle-label">
+        <input type="checkbox" id="nsfw-toggle" checked>
+        <span>NSFW</span>
+      </label>
+      <label class="toggle-label">
+        <input type="checkbox" id="fav-toggle">
+        <span>Favorites</span>
+      </label>
+    </div>
+    <div class="controls-bottom">
+      <span id="image-count"></span>
+      <div class="view-modes">
+        <button id="btn-wall" class="mode-btn active" title="Infinite wall">&#9638;&#9638;</button>
+        <button id="btn-grid" class="mode-btn" title="Grid">&#9637;&#9637;</button>
+        <button id="btn-fullscreen" class="mode-btn" title="Fullscreen (click image)">&#9633;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main viewer area -->
+  <div id="viewer">
+    <div id="wall-container" class="wall-container"></div>
+  </div>
+
+  <!-- Fullscreen overlay -->
+  <div id="fullscreen-overlay" class="fullscreen-overlay hidden">
+    <div class="fullscreen-glass glass-panel">
+      <div class="fullscreen-info">
+        <span id="fs-prompt"></span>
+        <span id="fs-model"></span>
+      </div>
+      <button id="fs-fav" class="fav-btn" title="Favorite">&#9829;</button>
+      <button id="fs-close" class="close-btn" title="Close (Esc)">&times;</button>
+    </div>
+    <img id="fs-image" class="fullscreen-image" src="" alt="">
+    <div id="filmstrip" class="filmstrip glass-panel">
+      <div id="filmstrip-inner" class="filmstrip-inner"></div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
