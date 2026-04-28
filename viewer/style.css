@@ -210,6 +210,25 @@ body {
   opacity: 1;
 }
 
+/* ── Date separator ── */
+.date-separator {
+  column-span: all;
+  width: 100%;
+  padding: 16px 8px 8px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.grid-container .date-separator {
+  column-span: none;
+  width: 100%;
+}
+
 /* ── Grid container ── */
 .grid-container {
   width: 100%;

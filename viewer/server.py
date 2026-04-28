@@ -216,6 +216,9 @@ def scan_collection(root, index_path):
             if scanned % 100 == 0:
                 print(f"  Scanned {scanned}/{total} images...")
 
+    # Sort newest first: by folder (date) descending, then filename descending
+    entries.sort(key=lambda e: (e["folder"], e["filename"]), reverse=True)
+
     with open(index_path, "w", encoding="utf-8") as f:
         json.dump(entries, f, ensure_ascii=False)
 

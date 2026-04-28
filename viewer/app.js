@@ -36,6 +36,29 @@ class App {
     this.setupAutoHide();
   }
 
+  formatDateLabel(folder) {
+    if (!folder) return '';
+    const months = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ];
+    const parts = folder.split('-');
+    if (parts.length >= 2) {
+      const y = parts[0];
+      const m = parseInt(parts[1], 10);
+      if (m >= 1 && m <= 12) return `${months[m - 1]} ${y}`;
+    }
+    return folder;
+  }
+
+  /* ── Date separator helper ── */
+  makeDateSeparator(label) {
+    const sep = document.createElement('div');
+    sep.className = 'date-separator';
+    sep.textContent = label;
+    return sep;
+  }
+
   async loadIndex() {
     try {
       const res = await fetch('index.json');
@@ -161,10 +184,26 @@ class App {
     const end = Math.min(start + this.WALL_PAGE_SIZE, this.filteredImages.length);
     if (start >= this.filteredImages.length) return;
 
+    let lastGroup = null;
+    // Determine lastGroup from the image just before this page
+    if (start > 0) {
+      lastGroup = this.filteredImages[start - 1].folder
+        ? this.filteredImages[start - 1].folder.substring(0, 7)
+        : null;
+    }
+
     for (let i = start; i < end; i++) {
       const img = this.filteredImages[i];
       if (this.renderedWallIds.has(img.id)) continue;
       this.renderedWallIds.add(img.id);
+
+      // Insert date separator when month-year changes
+      const group = img.folder ? img.folder.substring(0, 7) : null;
+      if (group && group !== lastGroup) {
+        const sep = this.makeDateSeparator(this.formatDateLabel(img.folder));
+        this.wallContainer.insertBefore(sep, this.wallSentinel);
+        lastGroup = group;
+      }
 
       const item = document.createElement('div');
       item.className = 'wall-item';
@@ -227,8 +266,18 @@ class App {
       }
     }, { rootMargin: '200px' });
 
+    let lastGroup = null;
+
     for (let i = 0; i < this.filteredImages.length; i++) {
       const img = this.filteredImages[i];
+
+      // Insert date separator when month-year changes
+      const group = img.folder ? img.folder.substring(0, 7) : null;
+      if (group && group !== lastGroup) {
+        container.appendChild(this.makeDateSeparator(this.formatDateLabel(img.folder)));
+        lastGroup = group;
+      }
+
       const item = document.createElement('div');
       item.className = 'grid-item';
       if (this.favorites.has(img.id)) item.classList.add('favorited');
