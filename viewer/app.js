@@ -9,7 +9,12 @@ class App {
     this.fsIndex = -1;
     this.hideTimer = null;
     this.wallContainer = null;
+    this.wallOffset = 0;
+    this.wallLoading = false;
+    this.wallScrollBound = false;
     this.gridObserver = null;
+
+    this.WALL_BATCH = 40;
 
     this.nsfwKeywords = [
       'nsfw', 'nude', 'naked', 'explicit', 'porn', 'hentai',
@@ -129,6 +134,9 @@ class App {
   }
 
   resetRendering() {
+    this.wallOffset = 0;
+    this.wallLoading = false;
+    this.wallScrollBound = false;
     if (this.wallContainer) {
       this.wallContainer.innerHTML = '';
     }
@@ -152,16 +160,23 @@ class App {
       this.wallContainer = document.createElement('div');
       this.wallContainer.className = 'wall-container';
       viewer.appendChild(this.wallContainer);
-      this.renderWallAll();
+      this.renderWallBatch();
+      this.bindWallScroll();
     } else if (mode === 'grid') {
       this.renderGrid();
     }
   }
 
-  /* ── Wall (all at once, no paging) ── */
-  renderWallAll() {
+  /* ── Wall (progressive, batch by batch) ── */
+  renderWallBatch() {
+    if (this.wallLoading) return;
+    if (this.wallOffset >= this.filteredImages.length) return;
+
+    this.wallLoading = true;
+    const end = Math.min(this.wallOffset + this.WALL_BATCH, this.filteredImages.length);
     const frag = document.createDocumentFragment();
-    for (let i = 0; i < this.filteredImages.length; i++) {
+
+    for (let i = this.wallOffset; i < end; i++) {
       const img = this.filteredImages[i];
       const item = document.createElement('div');
       item.className = 'wall-item';
@@ -189,7 +204,42 @@ class App {
       item.addEventListener('click', () => this.openFullscreen(i));
       frag.appendChild(item);
     }
+
     this.wallContainer.appendChild(frag);
+    this.wallOffset = end;
+    this.wallLoading = false;
+
+    // After render, check if we need to load more (content might still be short)
+    requestAnimationFrame(() => this.checkWallFill());
+  }
+
+  checkWallFill() {
+    const viewer = document.getElementById('viewer');
+    if (!viewer || this.wallOffset >= this.filteredImages.length) return;
+    // If the viewer isn't full yet, load another batch
+    if (viewer.scrollHeight <= viewer.clientHeight + 400) {
+      this.renderWallBatch();
+    }
+  }
+
+  bindWallScroll() {
+    if (this.wallScrollBound) return;
+    this.wallScrollBound = true;
+    const viewer = document.getElementById('viewer');
+    let ticking = false;
+
+    viewer.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const threshold = 800;
+          if (viewer.scrollTop + viewer.clientHeight >= viewer.scrollHeight - threshold) {
+            this.renderWallBatch();
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
   }
 
   /* ── Grid ── */
