@@ -14,7 +14,8 @@ class App {
     this.nsfwKeywords = [
       'nsfw', 'nude', 'naked', 'explicit', 'porn', 'hentai',
       'erotic', 'lewd', 'adult', 'nsfw,', 'xxx', 'sex',
-      'uncensored', 'topless', 'lingerie', 'bikini', 'nsfw-art'
+      'uncensored', 'topless', 'lingerie', 'bikini', 'nsfw-art',
+      'penis', 'fellatio', 'rape', 'cum', 'precum', 'cock'
     ];
 
     this.init();
