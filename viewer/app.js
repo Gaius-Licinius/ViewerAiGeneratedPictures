@@ -162,8 +162,8 @@ class App {
       viewer.appendChild(this.wallContainer);
       this.wallContainer.addEventListener('scroll', () => this.onWallScroll());
       this.addWallSentinel();
-      this.renderWallPage();
       this.setupWallObserver();
+      this.renderWallPage();
     } else if (mode === 'grid') {
       this.renderGrid();
     }
@@ -249,8 +249,69 @@ class App {
 
     this.wallPage++;
 
-    if (end < this.filteredImages.length) {
+    if (end < this.filteredImages.length && this.wallObserver) {
       this.wallObserver.observe(this.wallSentinel);
+    }
+  }
+
+  /* ── Grid ── */
+  renderGrid() {
+    const viewer = document.getElementById('viewer');
+    viewer.innerHTML = '';
+    const container = document.createElement('div');
+    container.className = 'grid-container';
+    viewer.appendChild(container);
+
+    this.gridObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const idx = parseInt(el.dataset.index);
+          const img = this.filteredImages[idx];
+          if (img && !el.querySelector('img').src) {
+            el.querySelector('img').src = `/images/${img.rel_path}`;
+          }
+          this.gridObserver.unobserve(el);
+        }
+      }
+    }, { root: container, rootMargin: '200px' });
+
+    let lastGroup = null;
+
+    for (let i = 0; i < this.filteredImages.length; i++) {
+      const img = this.filteredImages[i];
+
+      const group = img.folder ? img.folder.substring(0, 7) : null;
+      if (group && group !== lastGroup) {
+        container.appendChild(this.makeDateSeparator(this.formatDateLabel(img.folder)));
+        lastGroup = group;
+      }
+
+      const item = document.createElement('div');
+      item.className = 'grid-item';
+      if (this.favorites.has(img.id)) item.classList.add('favorited');
+      item.dataset.id = img.id;
+      item.dataset.index = i;
+
+      const imgEl = document.createElement('img');
+      imgEl.alt = img.prompt ? img.prompt.substring(0, 100) : '';
+
+      const favIcon = document.createElement('span');
+      favIcon.className = 'fav-indicator';
+      favIcon.textContent = this.favorites.has(img.id) ? '\u2665' : '\u2661';
+      favIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleFavorite(img.id);
+        favIcon.textContent = this.favorites.has(img.id) ? '\u2665' : '\u2661';
+        item.classList.toggle('favorited', this.favorites.has(img.id));
+      });
+
+      item.appendChild(imgEl);
+      item.appendChild(favIcon);
+      item.addEventListener('click', () => this.openFullscreen(i));
+      container.appendChild(item);
+
+      this.gridObserver.observe(item);
     }
   }
 
