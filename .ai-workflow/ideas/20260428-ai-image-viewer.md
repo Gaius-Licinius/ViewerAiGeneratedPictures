@@ -1,7 +1,7 @@
 ---
 title: Viewer Web d'Images Générées par IA
 date: 2026-04-28
-status: raw
+status: planning
 tags: [ai-images, metadata, nsfw-detection, viewer, web-app]
 ---
 
@@ -55,4 +55,4 @@ multi-mode avec filtres et navigation cross-dossiers. Accès local + réseau loc
 
 ## Related Documents
 
-- (none yet)
+- .ai-workflow/plans/20260428-ai-image-viewer.md
