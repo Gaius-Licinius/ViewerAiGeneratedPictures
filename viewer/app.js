@@ -114,7 +114,7 @@ class App {
     this.filteredImages = this.images.filter(img => {
       if (search && !(img.prompt || '').toLowerCase().includes(search)) return false;
       if (model && img.model !== model) return false;
-      if (!showNsfw && img.nsfw) return false;
+      if (!showNsfw && (img.nsfw || !(img.prompt || '').trim())) return false;
       if (favOnly && !this.favorites.has(img.id)) return false;
       return true;
     });
