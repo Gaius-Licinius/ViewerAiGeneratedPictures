@@ -9,12 +9,7 @@ class App {
     this.fsIndex = -1;
     this.hideTimer = null;
     this.wallContainer = null;
-    this.wallOffset = 0;
-    this.wallLoading = false;
-    this.wallScrollBound = false;
     this.gridObserver = null;
-
-    this.WALL_BATCH = 40;
 
     this.nsfwKeywords = [
       'nsfw', 'nude', 'naked', 'explicit', 'porn', 'hentai',
@@ -134,9 +129,6 @@ class App {
   }
 
   resetRendering() {
-    this.wallOffset = 0;
-    this.wallLoading = false;
-    this.wallScrollBound = false;
     if (this.wallContainer) {
       this.wallContainer.innerHTML = '';
     }
@@ -160,29 +152,25 @@ class App {
       this.wallContainer = document.createElement('div');
       this.wallContainer.className = 'wall-container';
       viewer.appendChild(this.wallContainer);
-      this.renderWallBatch();
-      this.bindWallScroll();
+      this.renderWallRandom();
     } else if (mode === 'grid') {
       this.renderGrid();
     }
   }
 
-  /* ── Wall (progressive, batch by batch) ── */
-  renderWallBatch() {
-    if (this.wallLoading) return;
-    if (this.wallOffset >= this.filteredImages.length) return;
-
-    this.wallLoading = true;
-    const end = Math.min(this.wallOffset + this.WALL_BATCH, this.filteredImages.length);
+  /* ── Wall (20 random images) ── */
+  renderWallRandom() {
+    const count = 20;
+    const pool = this.filteredImages;
+    const picked = this.shuffle([...pool]).slice(0, count);
     const frag = document.createDocumentFragment();
 
-    for (let i = this.wallOffset; i < end; i++) {
-      const img = this.filteredImages[i];
+    for (let i = 0; i < picked.length; i++) {
+      const img = picked[i];
       const item = document.createElement('div');
       item.className = 'wall-item';
       if (this.favorites.has(img.id)) item.classList.add('favorited');
       item.dataset.id = img.id;
-      item.dataset.index = i;
 
       const imgEl = document.createElement('img');
       imgEl.loading = 'lazy';
@@ -201,45 +189,20 @@ class App {
 
       item.appendChild(imgEl);
       item.appendChild(favIcon);
-      item.addEventListener('click', () => this.openFullscreen(i));
+      // Find the original index for fullscreen navigation
+      const origIndex = this.filteredImages.indexOf(img);
+      item.addEventListener('click', () => this.openFullscreen(origIndex));
       frag.appendChild(item);
     }
-
     this.wallContainer.appendChild(frag);
-    this.wallOffset = end;
-    this.wallLoading = false;
-
-    // After render, check if we need to load more (content might still be short)
-    requestAnimationFrame(() => this.checkWallFill());
   }
 
-  checkWallFill() {
-    const viewer = document.getElementById('viewer');
-    if (!viewer || this.wallOffset >= this.filteredImages.length) return;
-    // If the viewer isn't full yet, load another batch
-    if (viewer.scrollHeight <= viewer.clientHeight + 400) {
-      this.renderWallBatch();
+  shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-  }
-
-  bindWallScroll() {
-    if (this.wallScrollBound) return;
-    this.wallScrollBound = true;
-    const viewer = document.getElementById('viewer');
-    let ticking = false;
-
-    viewer.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const threshold = 800;
-          if (viewer.scrollTop + viewer.clientHeight >= viewer.scrollHeight - threshold) {
-            this.renderWallBatch();
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }, { passive: true });
+    return arr;
   }
 
   /* ── Grid ── */
