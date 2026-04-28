@@ -177,29 +177,26 @@ body {
 #viewer {
   width: 100%;
   height: 100vh;
-  overflow: hidden;
-}
-
-/* ── Wall container ── */
-.wall-container {
-  width: 100%;
-  height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
-  column-width: 420px;
-  column-gap: 10px;
-  padding: 80px 10px 20px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.15) transparent;
 }
 
-.wall-container::-webkit-scrollbar {
+#viewer::-webkit-scrollbar {
   width: 6px;
 }
 
-.wall-container::-webkit-scrollbar-thumb {
+#viewer::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
+}
+
+/* ── Wall container ── */
+.wall-container {
+  column-width: 420px;
+  column-gap: 10px;
+  padding: 80px 10px 20px;
 }
 
 .wall-item {
@@ -261,26 +258,10 @@ body {
 
 /* ── Grid container ── */
 .grid-container {
-  width: 100%;
-  height: 100vh;
-  overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   padding: 80px 10px 20px;
-  justify-content: center;
-  align-content: flex-start;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.15) transparent;
-}
-
-.grid-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.grid-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
 }
 
 .grid-item {

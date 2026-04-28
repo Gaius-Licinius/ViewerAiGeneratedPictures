@@ -212,7 +212,7 @@ class App {
           this.gridObserver.unobserve(el);
         }
       }
-    }, { root: container, rootMargin: '200px' });
+    }, { rootMargin: '400px' });
 
     let lastGroup = null;
 
