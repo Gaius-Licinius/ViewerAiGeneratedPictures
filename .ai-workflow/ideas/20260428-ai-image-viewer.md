@@ -56,3 +56,7 @@ multi-mode avec filtres et navigation cross-dossiers. Accès local + réseau loc
 ## Related Documents
 
 - .ai-workflow/plans/20260428-ai-image-viewer.md
+- .ai-workflow/learnings/20260428-test-via-http.md
+- .ai-workflow/learnings/20260428-css-columns-fixed-height.md
+- .ai-workflow/learnings/20260428-multi-format-png-metadata.md
+- .ai-workflow/learnings/20260428-shared-config-file.md
