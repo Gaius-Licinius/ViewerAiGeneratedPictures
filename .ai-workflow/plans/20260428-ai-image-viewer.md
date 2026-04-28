@@ -1,7 +1,7 @@
 ---
 title: AI Image Viewer — Core
 date: 2026-04-28
-status: ready
+status: done
 ideas:
   - .ai-workflow/ideas/20260428-ai-image-viewer.md
 group: ai-image-viewer

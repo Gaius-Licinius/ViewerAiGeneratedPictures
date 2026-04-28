@@ -1,7 +1,7 @@
 ---
 title: Viewer Web d'Images Générées par IA
 date: 2026-04-28
-status: planning
+status: done
 tags: [ai-images, metadata, nsfw-detection, viewer, web-app]
 ---
 
