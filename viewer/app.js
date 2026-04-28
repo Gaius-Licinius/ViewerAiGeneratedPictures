@@ -8,13 +8,8 @@ class App {
     this.currentMode = 'wall';
     this.fsIndex = -1;
     this.hideTimer = null;
-    this.wallObserver = null;
-    this.wallItemPool = [];
-    this.wallSentinel = null;
-    this.wallPage = 0;
-    this.WALL_PAGE_SIZE = 60;
     this.wallContainer = null;
-    this.renderedWallIds = new Set();
+    this.gridObserver = null;
 
     this.nsfwKeywords = [
       'nsfw', 'nude', 'naked', 'explicit', 'porn', 'hentai',
@@ -134,11 +129,8 @@ class App {
   }
 
   resetRendering() {
-    this.wallPage = 0;
-    this.renderedWallIds.clear();
     if (this.wallContainer) {
       this.wallContainer.innerHTML = '';
-      this.addWallSentinel();
     }
   }
 
@@ -160,65 +152,17 @@ class App {
       this.wallContainer = document.createElement('div');
       this.wallContainer.className = 'wall-container';
       viewer.appendChild(this.wallContainer);
-      this.wallContainer.addEventListener('scroll', () => this.onWallScroll());
-      this.addWallSentinel();
-      this.setupWallObserver();
-      this.renderWallPage();
+      this.renderWallAll();
     } else if (mode === 'grid') {
       this.renderGrid();
     }
   }
 
-  /* ── Infinite Wall ── */
-  addWallSentinel() {
-    if (!this.wallContainer) return;
-    this.wallSentinel = document.createElement('div');
-    this.wallSentinel.className = 'wall-sentinel';
-    this.wallSentinel.style.height = '1px';
-    this.wallContainer.appendChild(this.wallSentinel);
-  }
-
-  setupWallObserver() {
-    if (this.wallObserver) this.wallObserver.disconnect();
-    this.wallObserver = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) {
-        this.renderWallPage();
-      }
-    }, { root: this.wallContainer, rootMargin: '400px' });
-  }
-
-  onWallScroll() {
-    if (!this.wallSentinel || !this.wallObserver) return;
-    this.wallObserver.disconnect();
-    this.wallObserver.observe(this.wallSentinel);
-  }
-
-  renderWallPage() {
-    const start = this.wallPage * this.WALL_PAGE_SIZE;
-    const end = Math.min(start + this.WALL_PAGE_SIZE, this.filteredImages.length);
-    if (start >= this.filteredImages.length) return;
-
-    let lastGroup = null;
-    // Determine lastGroup from the image just before this page
-    if (start > 0) {
-      lastGroup = this.filteredImages[start - 1].folder
-        ? this.filteredImages[start - 1].folder.substring(0, 7)
-        : null;
-    }
-
-    for (let i = start; i < end; i++) {
+  /* ── Wall (all at once, no paging) ── */
+  renderWallAll() {
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < this.filteredImages.length; i++) {
       const img = this.filteredImages[i];
-      if (this.renderedWallIds.has(img.id)) continue;
-      this.renderedWallIds.add(img.id);
-
-      // Insert date separator when month-year changes
-      const group = img.folder ? img.folder.substring(0, 7) : null;
-      if (group && group !== lastGroup) {
-        const sep = this.makeDateSeparator(this.formatDateLabel(img.folder));
-        this.wallContainer.insertBefore(sep, this.wallSentinel);
-        lastGroup = group;
-      }
-
       const item = document.createElement('div');
       item.className = 'wall-item';
       if (this.favorites.has(img.id)) item.classList.add('favorited');
@@ -243,15 +187,9 @@ class App {
       item.appendChild(imgEl);
       item.appendChild(favIcon);
       item.addEventListener('click', () => this.openFullscreen(i));
-
-      this.wallContainer.insertBefore(item, this.wallSentinel);
+      frag.appendChild(item);
     }
-
-    this.wallPage++;
-
-    if (end < this.filteredImages.length && this.wallObserver) {
-      this.wallObserver.observe(this.wallSentinel);
-    }
+    this.wallContainer.appendChild(frag);
   }
 
   /* ── Grid ── */
