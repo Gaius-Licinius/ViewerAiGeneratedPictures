@@ -3,11 +3,10 @@
 
 import http.server
 import json
-import os
 import struct
+import os
 import pathlib
 import urllib.parse
-import time
 import threading
 
 COLLECTION_ROOT = r"C:\IA\Collection"
@@ -88,14 +87,14 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         pass  # suppress noisy logs
 
 
-def read_png_metadata(filepath):
-    """Extract the 'parameters' tEXt chunk from a PNG file."""
+def read_all_text_chunks(filepath):
+    """Read all tEXt chunks from a PNG file, return dict of key->value."""
+    chunks = {}
     try:
         with open(filepath, "rb") as f:
             sig = f.read(8)
             if sig != b"\x89PNG\r\n\x1a\n":
-                return None
-
+                return chunks
             while True:
                 length_bytes = f.read(4)
                 if len(length_bytes) < 4:
@@ -106,28 +105,27 @@ def read_png_metadata(filepath):
                     break
                 data = f.read(length)
                 f.read(4)  # CRC
-
                 if chunk_type == b"tEXt":
-                    null_pos = data.index(0)
-                    key = data[:null_pos].decode("ascii", errors="replace")
-                    value = data[null_pos + 1:].decode("latin-1", errors="replace")
-                    if key == "parameters":
-                        return value
+                    try:
+                        null_pos = data.index(0)
+                        key = data[:null_pos].decode("ascii", errors="replace")
+                        value = data[null_pos + 1:].decode("latin-1", errors="replace")
+                        chunks[key] = value
+                    except Exception:
+                        pass
     except Exception:
-        return None
-    return None
+        pass
+    return chunks
 
 
-def parse_parameters(raw):
-    """Parse SD parameter string into structured fields."""
-    raw = raw.strip()
-    lines = raw.split("\n")
+def parse_parameters_a1111(raw):
+    """Parse A1111/SDNext 'parameters' string."""
+    lines = raw.strip().split("\n")
     prompt = lines[0].strip() if lines else ""
 
     negative_prompt = ""
     fields = {}
 
-    # Parameters can be comma-separated on one line, or multi-line
     param_lines = []
     for line in lines[1:]:
         if "Negative prompt:" in line:
@@ -138,7 +136,6 @@ def parse_parameters(raw):
 
     param_text = " ".join(param_lines)
 
-    # Split by ", " and also by "| " (Fooocus format uses |)
     if "| " in param_text:
         parts = [p.strip() for p in param_text.split("| ")]
     else:
@@ -155,7 +152,7 @@ def parse_parameters(raw):
             neg_start = raw.index("Negative prompt:") + len("Negative prompt:")
             neg_end = raw.index("\nSteps:", neg_start) if "\nSteps:" in raw[neg_start:] else len(raw)
             negative_prompt = raw[neg_start:neg_end].strip()
-        except:
+        except Exception:
             pass
 
     return {
@@ -169,7 +166,147 @@ def parse_parameters(raw):
         "model_hash": fields.get("model_hash", ""),
         "model": fields.get("model", ""),
         "version": fields.get("version", ""),
-        "raw_fields": fields,
+    }
+
+
+def parse_comfyui_json(raw):
+    """Parse ComfyUI workflow JSON to extract prompts and model."""
+    try:
+        wf = json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        return None
+
+    pos_prompt = ""
+    neg_prompt = ""
+    model_name = ""
+    sampler = ""
+    cfg = ""
+    steps = ""
+    seed = ""
+
+    for _node_id, node in wf.items():
+        if not isinstance(node, dict):
+            continue
+        ct = node.get("class_type", "")
+        if ct == "CLIPTextEncode":
+            title = node.get("_meta", {}).get("title", "")
+            text = node.get("inputs", {}).get("text", "")
+            if "Negative" in title:
+                neg_prompt = text
+            else:
+                pos_prompt = text
+        elif ct in ("CheckpointLoaderSimple", "CheckpointLoader"):
+            model_name = node.get("inputs", {}).get("ckpt_name", "")
+        elif ct == "KSampler":
+            sampler = node.get("inputs", {}).get("sampler_name", "")
+            cfg_val = node.get("inputs", {}).get("cfg")
+            steps_val = node.get("inputs", {}).get("steps")
+            seed_val = node.get("inputs", {}).get("seed")
+            if cfg_val is not None:
+                cfg = str(cfg_val)
+            if steps_val is not None:
+                steps = str(steps_val)
+            if seed_val is not None:
+                seed = str(seed_val)
+
+    if not pos_prompt and not neg_prompt:
+        return None
+
+    return {
+        "prompt": pos_prompt,
+        "negative_prompt": neg_prompt,
+        "model": model_name,
+        "sampler": sampler,
+        "cfg_scale": cfg,
+        "steps": steps,
+        "seed": seed,
+        "size": "",
+        "model_hash": "",
+        "version": "",
+    }
+
+
+def parse_novelai(chunks):
+    """Extract prompt from NovelAI PNG metadata format."""
+    prompt = ""
+    neg_prompt = ""
+    model = ""
+    steps = ""
+    sampler = ""
+    cfg = ""
+    seed = ""
+
+    # Get prompt from Description (plain text)
+    if "Description" in chunks:
+        prompt = chunks["Description"].strip()
+
+    # Or from Comment JSON
+    if not prompt and "Comment" in chunks:
+        try:
+            comment = json.loads(chunks["Comment"])
+            prompt = comment.get("prompt", "")
+            if "uc" in comment:
+                neg_prompt = comment["uc"]
+        except (json.JSONDecodeError, ValueError):
+            prompt = chunks["Comment"].strip()
+
+    # Model from Source
+    if "Source" in chunks:
+        model = chunks["Source"].strip()
+
+    return {
+        "prompt": prompt,
+        "negative_prompt": neg_prompt,
+        "model": model,
+        "steps": steps,
+        "sampler": sampler,
+        "cfg_scale": cfg,
+        "seed": seed,
+        "size": "",
+        "model_hash": "",
+        "version": "",
+    }
+
+
+def extract_metadata(filepath):
+    """Extract metadata from a PNG file, auto-detecting the format."""
+    chunks = read_all_text_chunks(filepath)
+    if not chunks:
+        return empty_metadata()
+
+    # Format 1: A1111 parameters
+    if "parameters" in chunks:
+        return parse_parameters_a1111(chunks["parameters"])
+
+    # Format 2: ComfyUI prompt JSON
+    if "prompt" in chunks and chunks["prompt"].strip().startswith("{"):
+        result = parse_comfyui_json(chunks["prompt"])
+        if result and (result["prompt"] or result["negative_prompt"]):
+            return result
+
+    # Format 3: NovelAI (Description/Comment/Source)
+    if "Description" in chunks or "Comment" in chunks:
+        return parse_novelai(chunks)
+
+    # Format 4: Fallback - try any raw text in chunks
+    for key in ("Description", "Comment", "Title", "prompt"):
+        if key in chunks:
+            return {
+                "prompt": chunks[key].strip(),
+                "negative_prompt": "",
+                "model": chunks.get("Source", chunks.get("Software", "")),
+                "steps": "", "sampler": "", "cfg_scale": "",
+                "seed": "", "size": "", "model_hash": "", "version": "",
+            }
+
+    return empty_metadata()
+
+
+def empty_metadata():
+    return {
+        "prompt": "", "negative_prompt": "",
+        "model": "", "steps": "", "sampler": "", "cfg_scale": "",
+        "seed": "", "size": "", "model_hash": "", "version": "",
     }
 
 
@@ -188,12 +325,7 @@ def scan_collection(root, index_path):
             rel_path = os.path.relpath(full_path, root_abs)
             folder = rel_path.split(os.sep)[0] if os.sep in rel_path else ""
 
-            raw = read_png_metadata(full_path)
-            parsed = parse_parameters(raw) if raw else {
-                "prompt": "", "negative_prompt": "", "steps": "", "sampler": "",
-                "cfg_scale": "", "seed": "", "size": "", "model_hash": "",
-                "model": "", "version": "", "raw_fields": {}
-            }
+            parsed = extract_metadata(full_path)
 
             entries.append({
                 "id": len(entries),
