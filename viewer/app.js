@@ -27,15 +27,20 @@ class App {
 
   /* ── Initialization ── */
   async init() {
-    this.showSpinner();
-    await this.loadIndex();
-    this.detectNsfw();
-    this.populateModelFilter();
-    this.applyFilters();
-    this.setMode(this.currentMode);
-    this.bindEvents();
-    this.setupAutoHide();
-    this.hideSpinner();
+    try {
+      this.showSpinner();
+      await this.loadIndex();
+      this.detectNsfw();
+      this.populateModelFilter();
+      this.applyFilters();
+      this.setMode(this.currentMode);
+      this.bindEvents();
+      this.setupAutoHide();
+    } catch (err) {
+      console.error('Init failed:', err);
+    } finally {
+      this.hideSpinner();
+    }
   }
 
   showSpinner() {
