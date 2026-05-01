@@ -46,9 +46,10 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
     def serve_image(self, path):
         rel = path[len("/images/"):]
         safe_path = os.path.normpath(rel)
-        abs_path = os.path.join(COLLECTION_ROOT, safe_path)
+        abs_path = os.path.normpath(os.path.join(COLLECTION_ROOT, safe_path))
+        safe_root = os.path.normpath(os.path.abspath(COLLECTION_ROOT))
 
-        if not abs_path.startswith(os.path.abspath(COLLECTION_ROOT)):
+        if not abs_path.startswith(safe_root):
             self.send_error(403)
             return
 
@@ -67,10 +68,11 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
     def serve_thumbnail(self, path):
         rel = path[len("/thumb/"):]
         safe_path = os.path.normpath(rel)
-        abs_path = os.path.join(COLLECTION_ROOT, safe_path)
+        abs_path = os.path.normpath(os.path.join(COLLECTION_ROOT, safe_path))
+        safe_root = os.path.normpath(os.path.abspath(COLLECTION_ROOT))
         width = 300
 
-        if not abs_path.startswith(os.path.abspath(COLLECTION_ROOT)):
+        if not abs_path.startswith(safe_root):
             self.send_error(403)
             return
         if not os.path.isfile(abs_path):
