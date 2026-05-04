@@ -328,6 +328,7 @@ body {
   padding: 6px 8px;
   border-radius: var(--radius);
   z-index: 210;
+  transition: opacity 0.5s ease;
 }
 
 .fs-icon-btn {
@@ -371,6 +372,7 @@ body {
   padding: 10px 16px;
   z-index: 210;
   border-radius: var(--radius) var(--radius) 0 0;
+  transition: opacity 0.5s ease;
 }
 
 .filmstrip-inner {
@@ -476,6 +478,101 @@ body {
 .details-card .detail-grid .val {
   color: var(--text);
   word-break: break-word;
+}
+
+/* ── Slideshow speed select ── */
+.ss-speed-select {
+  min-width: auto;
+  width: 56px;
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* ── Slideshow button states ── */
+#fs-slideshow.active {
+  color: var(--accent);
+}
+
+#fs-shuffle.active {
+  color: var(--accent);
+}
+
+/* ── Kiosk mode ── */
+.kiosk-mode .fullscreen-top {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kiosk-mode .filmstrip {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Kiosk controls ── */
+.kiosk-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 215;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.kiosk-controls.visible {
+  opacity: 1;
+}
+
+.kiosk-controls.fading {
+  opacity: 0;
+}
+
+.ss-pause-btn {
+  position: absolute;
+  bottom: 28px;
+  right: 24px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  pointer-events: auto;
+  transition: background var(--transition), transform var(--transition), opacity var(--transition);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ss-pause-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+  transform: scale(1.1);
+}
+
+/* ── Progress bar ── */
+.ss-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.ss-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.1s linear;
 }
 
 /* ── Hidden ── */

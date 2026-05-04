@@ -45,11 +45,29 @@
     <div class="fullscreen-top glass-panel">
       <button id="fs-info" class="fs-icon-btn" title="Image details">&#9432;</button>
       <button id="fs-fav" class="fs-icon-btn" title="Favorite">&#9829;</button>
+      <select id="fs-speed" class="ss-speed-select glass-input" title="Vitesse diaporama">
+        <option value="2">2s</option>
+        <option value="3">3s</option>
+        <option value="5" selected>5s</option>
+        <option value="10">10s</option>
+        <option value="15">15s</option>
+        <option value="30">30s</option>
+      </select>
+      <button id="fs-shuffle" class="fs-icon-btn" title="Mode al&#233;atoire">&#128256;</button>
+      <button id="fs-slideshow" class="fs-icon-btn" title="Diaporama (Espace)">&#9654;</button>
       <button id="fs-close" class="fs-icon-btn" title="Close (Esc)">&times;</button>
     </div>
     <img id="fs-image" class="fullscreen-image" src="" alt="">
     <div id="filmstrip" class="filmstrip glass-panel">
       <div id="filmstrip-inner" class="filmstrip-inner"></div>
+    </div>
+
+    <!-- Slideshow kiosk controls -->
+    <div id="kiosk-controls" class="kiosk-controls hidden">
+      <button id="ss-pause" class="ss-pause-btn" title="Pause/Reprendre (Espace)">&#9208;</button>
+      <div id="ss-progress" class="ss-progress-bar">
+        <div id="ss-progress-fill" class="ss-progress-fill"></div>
+      </div>
     </div>
   </div>
 
