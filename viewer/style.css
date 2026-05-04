@@ -308,9 +308,6 @@ body {
   inset: 0;
   background: rgba(0, 0, 0, 0.96);
   z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: opacity 0.3s ease;
 }
 
@@ -352,11 +349,60 @@ body {
 }
 
 .fullscreen-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   max-width: 100vw;
   max-height: 100vh;
   object-fit: contain;
   transition: opacity 0.2s ease;
-  cursor: pointer;
+  transform: translate(-50%, -50%) scale(1);
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.fullscreen-image.smooth-zoom {
+  transition: opacity 0.2s ease, transform 0.3s ease;
+}
+
+/* ── Zoom container ── */
+#fs-zoom-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+#fs-zoom-container.zoomed {
+  cursor: grab;
+}
+
+#fs-zoom-container.panning {
+  cursor: grabbing;
+}
+
+/* ── Zoom badge ── */
+.zoom-badge {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  padding: 4px 10px;
+  z-index: 220;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.zoom-badge.visible {
+  opacity: 1;
 }
 
 /* ── Filmstrip ── */
@@ -499,6 +545,7 @@ body {
 
 #fs-shuffle.active {
   color: var(--accent);
+  background: rgba(99, 102, 241, 0.15);
 }
 
 /* ── Kiosk mode ── */
