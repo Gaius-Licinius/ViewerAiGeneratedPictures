@@ -653,17 +653,17 @@ class App {
 
     let html = '<h3>Positive Prompt</h3>';
     html += `<div class="prompt-block"><div class="detail-prompt">${this.escHtml(this.safeStr(info.prompt) || '\u2014')}</div>`;
-    html += '<button class="copy-btn" title="Copy">&#128203;</button></div>';
+    html += '<span class="copy-btn" title="Copy">&#128203;</span></div>';
 
     html += '<h3>Negative Prompt</h3>';
     html += `<div class="prompt-block"><div class="detail-neg">${this.escHtml(this.safeStr(info.negative_prompt) || '\u2014')}</div>`;
-    html += '<button class="copy-btn" title="Copy">&#128203;</button></div>';
+    html += '<span class="copy-btn" title="Copy">&#128203;</span></div>';
 
     html += '<h3>Parameters</h3><div class="detail-grid">';
     for (const [key, val] of fields) {
       html += `<span class="key">${key}</span>`;
       if (key === 'Seed') {
-        html += `<span class="val">${this.escHtml(val)} <button class="copy-btn-inline" data-copy="${this.escHtml(val)}" title="Copy">Copy</button></span>`;
+        html += `<span class="val">${this.escHtml(val)} <span class="copy-btn-inline" data-copy="${this.escHtml(val)}" title="Copy">&#128203;</span></span>`;
       } else {
         html += `<span class="val">${this.escHtml(val)}</span>`;
       }
@@ -685,12 +685,11 @@ class App {
   }
 
   copyToClipboard(text, btn) {
-    const isIcon = btn.classList.contains('copy-btn');
     const done = () => {
-      btn.innerHTML = isIcon ? '&#10003;' : 'Copied!';
+      btn.innerHTML = '&#10003;';
       btn.classList.add('copied');
       setTimeout(() => {
-        btn.innerHTML = isIcon ? '&#128203;' : 'Copy';
+        btn.innerHTML = '&#128203;';
         btn.classList.remove('copied');
       }, 1500);
     };

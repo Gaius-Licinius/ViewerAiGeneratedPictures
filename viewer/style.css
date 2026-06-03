@@ -499,6 +499,7 @@ body {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  align-items: flex-start;
 }
 
 .prompt-block .detail-prompt,
@@ -512,21 +513,12 @@ body {
 
 .copy-btn {
   flex-shrink: 0;
-  align-self: flex-start;
-  background: none;
-  border: none;
   color: var(--text-muted);
-  font-size: 16px;
+  font-size: 15px;
   cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 4px;
   opacity: 0;
   transition: opacity var(--transition), color var(--transition);
-  line-height: 1;
   user-select: none;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
 }
 
 .copy-btn:hover {
@@ -539,18 +531,12 @@ body {
 }
 
 .copy-btn-inline {
-  background: none;
-  border: none;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 13px;
   cursor: pointer;
-  padding: 0 4px;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: opacity var(--transition), color var(--transition);
   user-select: none;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
 }
 
 .copy-btn-inline:hover {
