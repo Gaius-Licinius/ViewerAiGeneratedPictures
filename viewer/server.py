@@ -262,15 +262,23 @@ def parse_comfyui_json(raw):
             else:
                 pos_prompt = pos_prompt or text
 
-    # Model from checkpoint/UNET/CLIP loaders
+    # Model from checkpoint/UNET loaders (preferred)
     for node in wf.values():
         if not isinstance(node, dict):
             continue
         ct = node.get("class_type", "")
         if ct in ("CheckpointLoaderSimple", "CheckpointLoader"):
             model_name = node.get("inputs", {}).get("ckpt_name", "") or model_name
-        elif ct in ("UNETLoader", "CLIPLoader"):
-            model_name = node.get("inputs", {}).get("unet_name", "") or node.get("inputs", {}).get("clip_name", "") or model_name
+        elif ct == "UNETLoader":
+            model_name = node.get("inputs", {}).get("unet_name", "") or model_name
+
+    # Fallback: CLIP loader only if no model found yet (text encoder, not the image model)
+    if not model_name:
+        for node in wf.values():
+            if not isinstance(node, dict):
+                continue
+            if node.get("class_type", "") == "CLIPLoader":
+                model_name = node.get("inputs", {}).get("clip_name", "") or model_name
 
     if not pos_prompt and not neg_prompt:
         return None
