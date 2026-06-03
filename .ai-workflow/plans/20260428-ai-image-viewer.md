@@ -156,3 +156,7 @@ In `app.js`:
 - .ai-workflow/learnings/20260428-css-columns-fixed-height.md
 - .ai-workflow/learnings/20260428-multi-format-png-metadata.md
 - .ai-workflow/learnings/20260428-shared-config-file.md
+- .ai-workflow/learnings/20260603-cache-busting-masks-css-fixes.md
+- .ai-workflow/learnings/20260603-windows-select-dropdown-css-fails.md
+- .ai-workflow/learnings/20260603-comfyui-ksampler-class-names-vary.md
+- .ai-workflow/learnings/20260603-threading-mixin-accelerates-local-server.md
