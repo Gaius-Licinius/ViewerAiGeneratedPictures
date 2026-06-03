@@ -651,17 +651,22 @@ class App {
       ['Folder', info.folder],
     ].filter(([, v]) => v);
 
-    let html = '<div class="detail-heading"><h3>Positive Prompt</h3>';
-    html += '<button class="copy-btn" title="Copy">&#128203;</button></div>';
-    html += `<div class="detail-prompt">${this.escHtml(this.safeStr(info.prompt) || '\u2014')}</div>`;
+    let html = '<h3>Positive Prompt</h3>';
+    html += `<div class="prompt-block"><div class="detail-prompt">${this.escHtml(this.safeStr(info.prompt) || '\u2014')}</div>`;
+    html += '<button class="copy-btn" title="Copy">Copy</button></div>';
 
-    html += '<div class="detail-heading"><h3>Negative Prompt</h3>';
-    html += '<button class="copy-btn" title="Copy">&#128203;</button></div>';
-    html += `<div class="detail-neg">${this.escHtml(this.safeStr(info.negative_prompt) || '\u2014')}</div>`;
+    html += '<h3>Negative Prompt</h3>';
+    html += `<div class="prompt-block"><div class="detail-neg">${this.escHtml(this.safeStr(info.negative_prompt) || '\u2014')}</div>`;
+    html += '<button class="copy-btn" title="Copy">Copy</button></div>';
 
     html += '<h3>Parameters</h3><div class="detail-grid">';
     for (const [key, val] of fields) {
-      html += `<span class="key">${key}</span><span class="val">${this.escHtml(val)}</span>`;
+      html += `<span class="key">${key}</span>`;
+      if (key === 'Seed') {
+        html += `<span class="val">${this.escHtml(val)} <button class="copy-btn-inline" data-copy="${this.escHtml(val)}" title="Copy">Copy</button></span>`;
+      } else {
+        html += `<span class="val">${this.escHtml(val)}</span>`;
+      }
     }
     html += '</div>';
 
@@ -673,17 +678,22 @@ class App {
     copyBtns.forEach((btn, i) => {
       btn.addEventListener('click', () => this.copyToClipboard(prompts[i], btn));
     });
+
+    content.querySelectorAll('.copy-btn-inline').forEach((btn) => {
+      btn.addEventListener('click', () => this.copyToClipboard(btn.dataset.copy, btn));
+    });
   }
 
   copyToClipboard(text, btn) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = '\u2713';
+    const done = () => {
+      btn.textContent = 'Copied!';
       btn.classList.add('copied');
       setTimeout(() => {
-        btn.textContent = '\uD83D\uDCCB';
+        btn.textContent = 'Copy';
         btn.classList.remove('copied');
       }, 1500);
-    }).catch(() => {
+    };
+    navigator.clipboard.writeText(text).then(done).catch(() => {
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
@@ -692,12 +702,7 @@ class App {
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
-      btn.textContent = '\u2713';
-      btn.classList.add('copied');
-      setTimeout(() => {
-        btn.textContent = '\uD83D\uDCCB';
-        btn.classList.remove('copied');
-      }, 1500);
+      done();
     });
   }
 

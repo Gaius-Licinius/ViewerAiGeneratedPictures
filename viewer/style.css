@@ -495,39 +495,61 @@ body {
   margin-top: 0;
 }
 
-.detail-heading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-  margin-top: 16px;
+.prompt-block {
+  position: relative;
+  margin-bottom: 12px;
 }
 
-.detail-heading:first-of-type {
-  margin-top: 0;
+.prompt-block:hover .copy-btn {
+  opacity: 1;
 }
 
 .copy-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
   background: none;
-  border: 1px solid var(--glass-border);
+  border: none;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 11px;
   cursor: pointer;
-  padding: 2px 8px;
-  border-radius: 6px;
-  transition: all var(--transition);
+  padding: 2px 6px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity var(--transition), color var(--transition);
   line-height: 1;
   user-select: none;
 }
 
 .copy-btn:hover {
-  background: var(--glass-hover);
-  color: var(--text);
+  color: var(--accent);
 }
 
 .copy-btn.copied {
+  opacity: 1;
   color: var(--accent);
-  border-color: var(--accent);
+}
+
+.copy-btn-inline {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.6;
+  transition: opacity var(--transition), color var(--transition);
+  user-select: none;
+}
+
+.copy-btn-inline:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.copy-btn-inline.copied {
+  opacity: 1;
+  color: var(--accent);
 }
 
 .details-card .detail-prompt {
