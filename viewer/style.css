@@ -503,7 +503,30 @@ body {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 2px;
-  margin: 0;
+  margin: 24px 0 6px 0;
+}
+
+.details-card h3:first-of-type {
+  margin-top: 0;
+}
+
+.details-card .detail-prompt {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.5;
+  word-break: break-word;
+  user-select: text;
+  margin-bottom: 0;
+}
+
+.details-card .detail-neg {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  word-break: break-word;
+  font-style: italic;
+  user-select: text;
+  margin-bottom: 0;
 }
 
 .details-card h3:first-of-type {
