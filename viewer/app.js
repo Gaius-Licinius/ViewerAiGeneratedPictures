@@ -66,7 +66,7 @@ class App {
 
   async loadConfig() {
     try {
-      const res = await fetch('config.json');
+      const res = await fetch('config.json?t=' + Date.now());
       const cfg = await res.json();
       this.nsfwKeywords = cfg.nsfw_keywords || [];
     } catch (err) {
@@ -99,12 +99,40 @@ class App {
 
   async loadIndex() {
     try {
-      const res = await fetch('index.json');
+      const res = await fetch('index.json?t=' + Date.now());
       this.images = await res.json();
       console.log(`Loaded ${this.images.length} images`);
     } catch (err) {
       console.error('Failed to load index.json:', err);
       this.images = [];
+    }
+  }
+
+  async rescanCollection() {
+    if (this.slideshowActive) this.stopSlideshow();
+    if (this.fsIndex >= 0) this.closeFullscreen();
+    const btn = document.getElementById('btn-rescan');
+    btn.disabled = true;
+    btn.classList.add('spinning');
+    this.showSpinner();
+    try {
+      const res = await fetch('/rescan');
+      const data = await res.json();
+      if (data.ok) {
+        console.log(`Rescan complete: ${data.count} images indexed`);
+        await this.loadIndex();
+        this.detectNsfw();
+        this.populateModelFilter();
+        this.applyFilters();
+        this.setMode(this.currentMode);
+      }
+    } catch (err) {
+      console.error('Rescan failed:', err);
+      alert('Rescan failed. Check the server console.');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('spinning');
+      this.hideSpinner();
     }
   }
 
@@ -125,6 +153,7 @@ class App {
   populateModelFilter() {
     const models = [...new Set(this.images.map(i => i.model).filter(Boolean))].sort();
     const select = document.getElementById('model-filter');
+    select.innerHTML = '<option value="">All models</option>';
     for (const m of models) {
       const opt = document.createElement('option');
       opt.value = m;
@@ -811,6 +840,8 @@ class App {
     document.getElementById('btn-wall').addEventListener('click', () => this.setMode('wall'));
     document.getElementById('btn-grid').addEventListener('click', () => this.setMode('grid'));
     document.getElementById('btn-fullscreen').addEventListener('click', () => this.toggleBrowserFullscreen());
+
+    document.getElementById('btn-rescan').addEventListener('click', () => this.rescanCollection());
 
     document.getElementById('fs-close').addEventListener('click', () => this.closeFullscreen());
     document.getElementById('fs-info').addEventListener('click', () => this.openInfoPopup());

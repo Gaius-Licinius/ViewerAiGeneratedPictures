@@ -36,7 +36,9 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
 
-        if path.startswith("/images/"):
+        if path == "/rescan":
+            self.serve_rescan()
+        elif path.startswith("/images/"):
             self.serve_image(path)
         elif path.startswith("/thumb/"):
             self.serve_thumbnail(path)
@@ -48,6 +50,15 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         if not path.startswith("/images/") and not path.startswith("/thumb/"):
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         super().end_headers()
+
+    def serve_rescan(self):
+        print("  Rescan requested, scanning collection...")
+        entries = scan_collection(COLLECTION_ROOT, INDEX_FILE)
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        body = json.dumps({"ok": True, "count": len(entries)}).encode("utf-8")
+        self.wfile.write(body)
 
     def serve_image(self, path):
         rel = path[len("/images/"):]
@@ -481,16 +492,38 @@ def scan_collection(root, index_path):
 
 
 def index_needs_update(collection_root, index_path):
-    """Check if index.json needs regeneration."""
+    """Check if index.json needs regeneration (detects additions, modifications, and deletions)."""
     if not os.path.exists(index_path):
+        print("  index.json missing, needs generation.")
         return True
     index_mtime = os.path.getmtime(index_path)
+
+    try:
+        with open(index_path, "r", encoding="utf-8") as f:
+            entries = json.load(f)
+    except Exception:
+        print("  index.json corrupted, needs regeneration.")
+        return True
+
+    disk_count = 0
+    newer_found = False
     for dirpath, _, filenames in os.walk(collection_root):
         for fname in filenames:
             if fname.lower().endswith(".png"):
+                disk_count += 1
                 fpath = os.path.join(dirpath, fname)
                 if os.path.getmtime(fpath) > index_mtime:
-                    return True
+                    newer_found = True
+
+    if newer_found:
+        print(f"  Newer files detected on disk, index needs update.")
+        return True
+
+    if disk_count != len(entries):
+        print(f"  Count mismatch: {disk_count} PNGs on disk vs {len(entries)} in index, needs update.")
+        return True
+
+    print(f"  Index up to date ({disk_count} images).")
     return False
 
 

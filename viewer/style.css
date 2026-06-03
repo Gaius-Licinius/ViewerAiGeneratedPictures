@@ -188,6 +188,27 @@ body {
   color: var(--accent);
 }
 
+.rescan-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all var(--transition);
+  line-height: 1;
+}
+
+.rescan-btn:hover {
+  background: var(--glass-hover);
+  color: var(--text);
+}
+
+.rescan-btn.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
 /* ── Viewer area ── */
 #viewer {
   width: 100%;
