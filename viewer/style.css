@@ -120,8 +120,14 @@ body {
   border-color: var(--accent);
 }
 
-.glass-input option {
+select.glass-input {
+  background: rgba(255, 255, 255, 0.15);
   color: #111;
+}
+
+select.glass-input option {
+  color: #111;
+  background: #fff;
 }
 
 #search {
