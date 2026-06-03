@@ -7,7 +7,7 @@ import struct
 import os
 import pathlib
 import urllib.parse
-import threading
+import socketserver
 
 COLLECTION_ROOT = None
 VIEWER_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -494,6 +494,10 @@ def index_needs_update(collection_root, index_path):
     return False
 
 
+class ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    daemon_threads = True
+
+
 def main():
     load_config()
 
@@ -506,7 +510,7 @@ def main():
     else:
         print("  Index up to date, skipping scan.")
 
-    server = http.server.HTTPServer((HOST, PORT), ViewerHandler)
+    server = ThreadingHTTPServer((HOST, PORT), ViewerHandler)
     local_ip = f"http://localhost:{PORT}"
     print(f"\n  Viewer running at {local_ip}")
     print("  Press Ctrl+C to stop.\n")
