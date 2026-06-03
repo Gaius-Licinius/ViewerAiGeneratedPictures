@@ -651,10 +651,12 @@ class App {
       ['Folder', info.folder],
     ].filter(([, v]) => v);
 
-    let html = '<h3>Positive Prompt</h3>';
+    let html = '<div class="detail-heading"><h3>Positive Prompt</h3>';
+    html += '<button class="copy-btn" title="Copy">&#128203;</button></div>';
     html += `<div class="detail-prompt">${this.escHtml(this.safeStr(info.prompt) || '\u2014')}</div>`;
 
-    html += '<h3>Negative Prompt</h3>';
+    html += '<div class="detail-heading"><h3>Negative Prompt</h3>';
+    html += '<button class="copy-btn" title="Copy">&#128203;</button></div>';
     html += `<div class="detail-neg">${this.escHtml(this.safeStr(info.negative_prompt) || '\u2014')}</div>`;
 
     html += '<h3>Parameters</h3><div class="detail-grid">';
@@ -665,6 +667,38 @@ class App {
 
     content.innerHTML = html;
     popup.classList.remove('hidden');
+
+    const copyBtns = content.querySelectorAll('.copy-btn');
+    const prompts = [this.safeStr(info.prompt), this.safeStr(info.negative_prompt)];
+    copyBtns.forEach((btn, i) => {
+      btn.addEventListener('click', () => this.copyToClipboard(prompts[i], btn));
+    });
+  }
+
+  copyToClipboard(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '\u2713';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '\uD83D\uDCCB';
+        btn.classList.remove('copied');
+      }, 1500);
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      btn.textContent = '\u2713';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '\uD83D\uDCCB';
+        btn.classList.remove('copied');
+      }, 1500);
+    });
   }
 
   closeInfoPopup() {
