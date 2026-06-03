@@ -120,6 +120,10 @@ body {
   border-color: var(--accent);
 }
 
+.glass-input option {
+  color: #111;
+}
+
 #search {
   flex: 1;
   min-width: 200px;
