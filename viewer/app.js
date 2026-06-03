@@ -728,6 +728,15 @@ class App {
     }
   }
 
+  /* ── Browser fullscreen ── */
+  toggleBrowserFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
   /* ── Favorites ── */
   toggleFavorite(id) {
     if (this.favorites.has(id)) {
@@ -764,6 +773,7 @@ class App {
 
     document.getElementById('btn-wall').addEventListener('click', () => this.setMode('wall'));
     document.getElementById('btn-grid').addEventListener('click', () => this.setMode('grid'));
+    document.getElementById('btn-fullscreen').addEventListener('click', () => this.toggleBrowserFullscreen());
 
     document.getElementById('fs-close').addEventListener('click', () => this.closeFullscreen());
     document.getElementById('fs-info').addEventListener('click', () => this.openInfoPopup());
@@ -781,6 +791,14 @@ class App {
     });
 
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'f' || e.key === 'F') {
+        const tag = document.activeElement.tagName;
+        if (tag !== 'INPUT' && tag !== 'SELECT' && tag !== 'TEXTAREA') {
+          e.preventDefault();
+          this.toggleBrowserFullscreen();
+          return;
+        }
+      }
       if (this.fsIndex >= 0) {
         if (e.key === 'ArrowLeft') { e.preventDefault(); this.navigateFullscreen(-1); }
         if (e.key === 'ArrowRight') { e.preventDefault(); this.navigateFullscreen(1); }
