@@ -495,39 +495,24 @@ body {
   margin-top: 0;
 }
 
-.prompt-block {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  align-items: flex-start;
-}
-
-.prompt-block .detail-prompt,
-.prompt-block .detail-neg {
-  flex: 1;
-}
-
-.prompt-block:hover .copy-btn {
-  opacity: 1;
-}
-
 .copy-btn {
-  flex-shrink: 0;
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
-  opacity: 0;
+  opacity: 0.5;
   transition: opacity var(--transition), color var(--transition);
   user-select: none;
 }
 
 .copy-btn:hover {
+  opacity: 1;
   color: var(--accent);
 }
 
 .copy-btn.copied {
   opacity: 1;
   color: var(--accent);
+  font-size: 12px;
 }
 
 .copy-btn-inline {
@@ -547,6 +532,7 @@ body {
 .copy-btn-inline.copied {
   opacity: 1;
   color: var(--accent);
+  font-size: 11px;
 }
 
 .details-card .detail-prompt {

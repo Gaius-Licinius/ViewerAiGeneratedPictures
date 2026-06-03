@@ -651,13 +651,11 @@ class App {
       ['Folder', info.folder],
     ].filter(([, v]) => v);
 
-    let html = '<h3>Positive Prompt</h3>';
-    html += `<div class="prompt-block"><div class="detail-prompt">${this.escHtml(this.safeStr(info.prompt) || '\u2014')}</div>`;
-    html += '<span class="copy-btn" title="Copy">&#128203;</span></div>';
+    let html = '<h3>Positive Prompt <span class="copy-btn" title="Copy">&#128203;</span></h3>';
+    html += `<div class="detail-prompt">${this.escHtml(this.safeStr(info.prompt) || '\u2014')}</div>`;
 
-    html += '<h3>Negative Prompt</h3>';
-    html += `<div class="prompt-block"><div class="detail-neg">${this.escHtml(this.safeStr(info.negative_prompt) || '\u2014')}</div>`;
-    html += '<span class="copy-btn" title="Copy">&#128203;</span></div>';
+    html += '<h3>Negative Prompt <span class="copy-btn" title="Copy">&#128203;</span></h3>';
+    html += `<div class="detail-neg">${this.escHtml(this.safeStr(info.negative_prompt) || '\u2014')}</div>`;
 
     html += '<h3>Parameters</h3><div class="detail-grid">';
     for (const [key, val] of fields) {
@@ -686,7 +684,7 @@ class App {
 
   copyToClipboard(text, btn) {
     const done = () => {
-      btn.innerHTML = '&#10003;';
+      btn.innerHTML = 'Copied!';
       btn.classList.add('copied');
       setTimeout(() => {
         btn.innerHTML = '&#128203;';
