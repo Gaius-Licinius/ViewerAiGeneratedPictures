@@ -651,20 +651,57 @@ class App {
       ['Folder', info.folder],
     ].filter(([, v]) => v);
 
-    let html = '<h3>Positive Prompt</h3>';
+    let html = '<h3>Positive Prompt <span class="copy-btn" title="Copy">&#128203;</span></h3>';
     html += `<div class="detail-prompt">${this.escHtml(this.safeStr(info.prompt) || '\u2014')}</div>`;
 
-    html += '<h3>Negative Prompt</h3>';
+    html += '<h3>Negative Prompt <span class="copy-btn" title="Copy">&#128203;</span></h3>';
     html += `<div class="detail-neg">${this.escHtml(this.safeStr(info.negative_prompt) || '\u2014')}</div>`;
 
     html += '<h3>Parameters</h3><div class="detail-grid">';
     for (const [key, val] of fields) {
-      html += `<span class="key">${key}</span><span class="val">${this.escHtml(val)}</span>`;
+      html += `<span class="key">${key}</span>`;
+      if (key === 'Seed') {
+        html += `<span class="val">${this.escHtml(val)} <span class="copy-btn-inline" data-copy="${this.escHtml(val)}" title="Copy">&#128203;</span></span>`;
+      } else {
+        html += `<span class="val">${this.escHtml(val)}</span>`;
+      }
     }
     html += '</div>';
 
     content.innerHTML = html;
     popup.classList.remove('hidden');
+
+    const copyBtns = content.querySelectorAll('.copy-btn');
+    const prompts = [this.safeStr(info.prompt), this.safeStr(info.negative_prompt)];
+    copyBtns.forEach((btn, i) => {
+      btn.addEventListener('click', () => this.copyToClipboard(prompts[i], btn));
+    });
+
+    content.querySelectorAll('.copy-btn-inline').forEach((btn) => {
+      btn.addEventListener('click', () => this.copyToClipboard(btn.dataset.copy, btn));
+    });
+  }
+
+  copyToClipboard(text, btn) {
+    const done = () => {
+      btn.innerHTML = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerHTML = '&#128203;';
+        btn.classList.remove('copied');
+      }, 1500);
+    };
+    navigator.clipboard.writeText(text).then(done).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      done();
+    });
   }
 
   closeInfoPopup() {
@@ -728,6 +765,15 @@ class App {
     }
   }
 
+  /* ── Browser fullscreen ── */
+  toggleBrowserFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
   /* ── Favorites ── */
   toggleFavorite(id) {
     if (this.favorites.has(id)) {
@@ -764,6 +810,7 @@ class App {
 
     document.getElementById('btn-wall').addEventListener('click', () => this.setMode('wall'));
     document.getElementById('btn-grid').addEventListener('click', () => this.setMode('grid'));
+    document.getElementById('btn-fullscreen').addEventListener('click', () => this.toggleBrowserFullscreen());
 
     document.getElementById('fs-close').addEventListener('click', () => this.closeFullscreen());
     document.getElementById('fs-info').addEventListener('click', () => this.openInfoPopup());
@@ -781,6 +828,14 @@ class App {
     });
 
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'f' || e.key === 'F') {
+        const tag = document.activeElement.tagName;
+        if (tag !== 'INPUT' && tag !== 'SELECT' && tag !== 'TEXTAREA') {
+          e.preventDefault();
+          this.toggleBrowserFullscreen();
+          return;
+        }
+      }
       if (this.fsIndex >= 0) {
         if (e.key === 'ArrowLeft') { e.preventDefault(); this.navigateFullscreen(-1); }
         if (e.key === 'ArrowRight') { e.preventDefault(); this.navigateFullscreen(1); }

@@ -43,6 +43,12 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         else:
             super().do_GET()
 
+    def end_headers(self):
+        path = urllib.parse.urlparse(self.path).path
+        if not path.startswith("/images/") and not path.startswith("/thumb/"):
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        super().end_headers()
+
     def serve_image(self, path):
         rel = path[len("/images/"):]
         safe_path = os.path.normpath(rel)
@@ -197,12 +203,14 @@ def parse_comfyui_json(raw):
     steps = ""
     seed = ""
 
-    # Find KSampler to trace positive/negative node connections
+    # Find KSampler (or variant) to trace positive/negative node connections
     ksampler = None
     for node_id, node in wf.items():
         if not isinstance(node, dict):
             continue
-        if node.get("class_type") == "KSampler":
+        ct = node.get("class_type", "")
+        inp = node.get("inputs", {})
+        if ct == "KSampler" or ("positive" in inp and "negative" in inp and "model" in inp):
             ksampler = (node_id, node)
             break
 
@@ -224,7 +232,8 @@ def parse_comfyui_json(raw):
         if pos_conn and isinstance(pos_conn, list) and len(pos_conn) > 0:
             pos_node_id = pos_conn[0]
             if pos_node_id in clips:
-                pos_prompt = clips[pos_node_id].get("inputs", {}).get("text", "")
+                pos_text = clips[pos_node_id].get("inputs", {}).get("text", "")
+                pos_prompt = resolve_text_value(wf, pos_text)
             else:
                 pos_prompt = resolve_clip_text(wf, pos_node_id)
 
@@ -233,7 +242,8 @@ def parse_comfyui_json(raw):
         if neg_conn and isinstance(neg_conn, list) and len(neg_conn) > 0:
             neg_node_id = neg_conn[0]
             if neg_node_id in clips:
-                neg_prompt = clips[neg_node_id].get("inputs", {}).get("text", "")
+                neg_text = clips[neg_node_id].get("inputs", {}).get("text", "")
+                neg_prompt = resolve_text_value(wf, neg_text)
             else:
                 neg_prompt = resolve_clip_text(wf, neg_node_id)
 
@@ -246,25 +256,35 @@ def parse_comfyui_json(raw):
         if steps_val is not None:
             steps = str(steps_val)
         if seed_val is not None:
-            seed = str(seed_val)
+            seed = resolve_text_value(wf, seed_val) if isinstance(seed_val, list) else str(seed_val)
 
     # Fallback: use _meta.title if KSampler trace didn't find clips
     if not pos_prompt and not neg_prompt:
         for node in clips.values():
             title = node.get("_meta", {}).get("title", "")
-            text = node.get("inputs", {}).get("text", "")
+            text = resolve_text_value(wf, node.get("inputs", {}).get("text", ""))
             if "Negative" in title:
                 neg_prompt = neg_prompt or text
             else:
                 pos_prompt = pos_prompt or text
 
-    # Model from checkpoint loaders
+    # Model from checkpoint/UNET loaders (preferred)
     for node in wf.values():
         if not isinstance(node, dict):
             continue
         ct = node.get("class_type", "")
         if ct in ("CheckpointLoaderSimple", "CheckpointLoader"):
             model_name = node.get("inputs", {}).get("ckpt_name", "") or model_name
+        elif ct == "UNETLoader":
+            model_name = node.get("inputs", {}).get("unet_name", "") or model_name
+
+    # Fallback: CLIP loader only if no model found yet (text encoder, not the image model)
+    if not model_name:
+        for node in wf.values():
+            if not isinstance(node, dict):
+                continue
+            if node.get("class_type", "") == "CLIPLoader":
+                model_name = node.get("inputs", {}).get("clip_name", "") or model_name
 
     if not pos_prompt and not neg_prompt:
         return None
@@ -283,6 +303,26 @@ def parse_comfyui_json(raw):
     }
 
 
+def resolve_text_value(wf, value):
+    """Resolve a text value, following node references (e.g. PrimitiveStringMultiline)."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list) and len(value) > 0:
+        ref_node_id = value[0]
+        ref_node = wf.get(ref_node_id)
+        if isinstance(ref_node, dict):
+            inp = ref_node.get("inputs", {})
+            for key in ("value", "text", "prompt", "string", "seed"):
+                v = inp.get(key)
+                if v is not None:
+                    result = resolve_text_value(wf, v)
+                    if result:
+                        return result
+    if isinstance(value, (int, float)):
+        return str(value)
+    return ""
+
+
 def resolve_clip_text(wf, node_id):
     """Trace through intermediate nodes (like wildcard/conditioning) to find CLIPTextEncode text."""
     node = wf.get(node_id)
@@ -290,8 +330,8 @@ def resolve_clip_text(wf, node_id):
         return ""
     ct = node.get("class_type", "")
     if ct == "CLIPTextEncode":
-        return node.get("inputs", {}).get("text", "")
-    # Try tracing through common intermediate nodes
+        raw = node.get("inputs", {}).get("text", "")
+        return resolve_text_value(wf, raw)
     for key in ("positive", "text", "clip", "conditioning"):
         conn = node.get("inputs", {}).get(key)
         if isinstance(conn, list) and len(conn) > 0:
