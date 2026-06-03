@@ -127,6 +127,13 @@ body {
 
 #model-filter {
   min-width: 160px;
+  color: #111;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.ss-speed-select {
+  color: #111;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .toggle-label {
