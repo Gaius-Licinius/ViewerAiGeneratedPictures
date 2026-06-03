@@ -206,7 +206,7 @@ class App {
       const promptStr = this.safeStr(img.prompt);
       const imgEl = document.createElement('img');
       imgEl.loading = 'lazy';
-      imgEl.src = `/thumb/${img.rel_path}`;
+      imgEl.src = `/images/${img.rel_path}`;
       imgEl.alt = promptStr ? promptStr.substring(0, 100) : '';
 
       const favIcon = document.createElement('span');
