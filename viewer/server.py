@@ -270,13 +270,13 @@ def parse_comfyui_json(raw):
         return None
 
     return {
-        "prompt": pos_prompt,
-        "negative_prompt": neg_prompt,
-        "model": model_name,
-        "sampler": sampler,
-        "cfg_scale": cfg,
-        "steps": steps,
-        "seed": seed,
+        "prompt": str(pos_prompt) if pos_prompt else "",
+        "negative_prompt": str(neg_prompt) if neg_prompt else "",
+        "model": str(model_name) if model_name else "",
+        "sampler": str(sampler) if sampler else "",
+        "cfg_scale": str(cfg) if cfg else "",
+        "steps": str(steps) if steps else "",
+        "seed": str(seed) if seed else "",
         "size": "",
         "model_hash": "",
         "version": "",
@@ -402,13 +402,20 @@ def scan_collection(root, index_path):
 
             parsed = extract_metadata(full_path)
 
+            prompt_val = parsed["prompt"]
+            neg_val = parsed["negative_prompt"]
+            if not isinstance(prompt_val, str):
+                prompt_val = str(prompt_val[0]) if isinstance(prompt_val, list) and prompt_val else ""
+            if not isinstance(neg_val, str):
+                neg_val = str(neg_val[0]) if isinstance(neg_val, list) and neg_val else ""
+
             entries.append({
                 "id": len(entries),
                 "filename": fname,
                 "folder": folder,
                 "rel_path": rel_path.replace("\\", "/"),
-                "prompt": parsed["prompt"],
-                "negative_prompt": parsed["negative_prompt"],
+                "prompt": prompt_val,
+                "negative_prompt": neg_val,
                 "steps": parsed["steps"],
                 "sampler": parsed["sampler"],
                 "cfg_scale": parsed["cfg_scale"],

@@ -108,11 +108,15 @@ class App {
     }
   }
 
+  safeStr(v) {
+    return typeof v === 'string' ? v : '';
+  }
+
   detectNsfw() {
     const lowerKeywords = this.nsfwKeywords.map(k => k.toLowerCase());
     for (const img of this.images) {
-      const prompt = (img.prompt || '').toLowerCase();
-      const negPrompt = (img.negative_prompt || '').toLowerCase();
+      const prompt = this.safeStr(img.prompt || '').toLowerCase();
+      const negPrompt = this.safeStr(img.negative_prompt || '').toLowerCase();
       const combined = prompt + ' ' + negPrompt;
       img.nsfw = lowerKeywords.some(kw => combined.includes(kw));
     }
@@ -137,9 +141,10 @@ class App {
     const favOnly = document.getElementById('fav-toggle').checked;
 
     this.filteredImages = this.images.filter(img => {
-      if (search && !(img.prompt || '').toLowerCase().includes(search)) return false;
+      const promptStr = this.safeStr(img.prompt || '');
+      if (search && !promptStr.toLowerCase().includes(search)) return false;
       if (model && img.model !== model) return false;
-      if (!showNsfw && (img.nsfw || !(img.prompt || '').trim())) return false;
+      if (!showNsfw && (img.nsfw || !promptStr.trim())) return false;
       if (favOnly && !this.favorites.has(img.id)) return false;
       return true;
     });
@@ -198,10 +203,11 @@ class App {
       if (this.favorites.has(img.id)) item.classList.add('favorited');
       item.dataset.id = img.id;
 
+      const promptStr = this.safeStr(img.prompt);
       const imgEl = document.createElement('img');
       imgEl.loading = 'lazy';
       imgEl.src = `/images/${img.rel_path}`;
-      imgEl.alt = img.prompt ? img.prompt.substring(0, 100) : '';
+      imgEl.alt = promptStr ? promptStr.substring(0, 100) : '';
 
       const favIcon = document.createElement('span');
       favIcon.className = 'fav-indicator';
@@ -215,7 +221,6 @@ class App {
 
       item.appendChild(imgEl);
       item.appendChild(favIcon);
-      // Find the original index for fullscreen navigation
       const origIndex = this.filteredImages.indexOf(img);
       item.addEventListener('click', () => this.openFullscreen(origIndex));
       frag.appendChild(item);
@@ -270,8 +275,9 @@ class App {
       item.dataset.id = img.id;
       item.dataset.index = i;
 
+      const promptStr = this.safeStr(img.prompt);
       const imgEl = document.createElement('img');
-      imgEl.alt = img.prompt ? img.prompt.substring(0, 100) : '';
+      imgEl.alt = promptStr ? promptStr.substring(0, 100) : '';
 
       const favIcon = document.createElement('span');
       favIcon.className = 'fav-indicator';
@@ -646,10 +652,10 @@ class App {
     ].filter(([, v]) => v);
 
     let html = '<h3>Positive Prompt</h3>';
-    html += `<div class="detail-prompt">${this.escHtml(info.prompt || '—')}</div>`;
+    html += `<div class="detail-prompt">${this.escHtml(this.safeStr(info.prompt) || '\u2014')}</div>`;
 
     html += '<h3>Negative Prompt</h3>';
-    html += `<div class="detail-neg">${this.escHtml(info.negative_prompt || '—')}</div>`;
+    html += `<div class="detail-neg">${this.escHtml(this.safeStr(info.negative_prompt) || '\u2014')}</div>`;
 
     html += '<h3>Parameters</h3><div class="detail-grid">';
     for (const [key, val] of fields) {
@@ -685,7 +691,8 @@ class App {
       thumb.className = 'filmstrip-thumb';
       if (i === this.fsIndex) thumb.classList.add('active');
       thumb.src = `/images/${img.rel_path}`;
-      thumb.title = img.prompt ? img.prompt.substring(0, 60) : '';
+      const promptStr = this.safeStr(img.prompt);
+      thumb.title = promptStr ? promptStr.substring(0, 60) : '';
       thumb.addEventListener('click', () => {
         this.fsIndex = i;
         this.updateFullscreen();
