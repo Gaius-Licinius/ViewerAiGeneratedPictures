@@ -109,7 +109,6 @@ body {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  color: var(--text);
   padding: 6px 12px;
   font-size: 14px;
   outline: none;
@@ -120,19 +119,10 @@ body {
   border-color: var(--accent);
 }
 
-select.glass-input {
-  background: rgba(255, 255, 255, 0.15);
-  color: #111;
-}
-
-select.glass-input option {
-  color: #111;
-  background: #fff;
-}
-
 #search {
   flex: 1;
   min-width: 200px;
+  color: var(--text);
 }
 
 #model-filter {
