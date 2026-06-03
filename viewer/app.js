@@ -206,7 +206,7 @@ class App {
       const promptStr = this.safeStr(img.prompt);
       const imgEl = document.createElement('img');
       imgEl.loading = 'lazy';
-      imgEl.src = `/images/${img.rel_path}`;
+      imgEl.src = `/thumb/${img.rel_path}`;
       imgEl.alt = promptStr ? promptStr.substring(0, 100) : '';
 
       const favIcon = document.createElement('span');
@@ -251,7 +251,7 @@ class App {
           const idx = parseInt(el.dataset.index);
           const img = this.filteredImages[idx];
           if (img && !el.querySelector('img').src) {
-            el.querySelector('img').src = `/images/${img.rel_path}`;
+            el.querySelector('img').src = `/thumb/${img.rel_path}`;
           }
           this.gridObserver.unobserve(el);
         }
@@ -727,7 +727,7 @@ class App {
       const thumb = document.createElement('img');
       thumb.className = 'filmstrip-thumb';
       if (i === this.fsIndex) thumb.classList.add('active');
-      thumb.src = `/images/${img.rel_path}`;
+      thumb.src = `/thumb/${img.rel_path}`;
       const promptStr = this.safeStr(img.prompt);
       thumb.title = promptStr ? promptStr.substring(0, 60) : '';
       thumb.addEventListener('click', () => {
