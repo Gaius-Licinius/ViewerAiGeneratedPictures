@@ -43,6 +43,12 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         else:
             super().do_GET()
 
+    def end_headers(self):
+        path = urllib.parse.urlparse(self.path).path
+        if not path.startswith("/images/") and not path.startswith("/thumb/"):
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        super().end_headers()
+
     def serve_image(self, path):
         rel = path[len("/images/"):]
         safe_path = os.path.normpath(rel)
