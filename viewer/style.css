@@ -496,8 +496,14 @@ body {
 }
 
 .prompt-block {
-  position: relative;
+  display: flex;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+.prompt-block .detail-prompt,
+.prompt-block .detail-neg {
+  flex: 1;
 }
 
 .prompt-block:hover .copy-btn {
@@ -505,20 +511,22 @@ body {
 }
 
 .copy-btn {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
+  flex-shrink: 0;
+  align-self: flex-start;
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 16px;
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 2px 4px;
   border-radius: 4px;
   opacity: 0;
   transition: opacity var(--transition), color var(--transition);
   line-height: 1;
   user-select: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .copy-btn:hover {
@@ -540,6 +548,9 @@ body {
   opacity: 0.6;
   transition: opacity var(--transition), color var(--transition);
   user-select: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .copy-btn-inline:hover {
