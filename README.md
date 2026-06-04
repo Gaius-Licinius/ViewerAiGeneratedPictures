@@ -5,6 +5,7 @@ A local web-based viewer for AI-generated images with metadata extraction and ze
 ## Features
 
 - Multi-format PNG metadata extraction (A1111, ComfyUI, NovelAI, Anima)
+- LORA extraction and display in details pop-in (LoraLoader, rgthree Lora Loader Stack, A1111 inline tags)
 - Three view modes: random wall, grid with date separators, fullscreen with filmstrip
 - Slideshow mode with kiosk view, shuffle, adjustable speed, and progress bar
 - Zoom (scroll wheel) and pan (click-drag) in fullscreen

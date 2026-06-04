@@ -185,6 +185,18 @@ def parse_parameters_a1111(raw):
         except Exception:
             pass
 
+    loras = []
+    import re
+    for m in re.finditer(r"<lora:([^:>]+):([^>]+)>", raw, re.IGNORECASE):
+        name = m.group(1).strip()
+        weight = m.group(2).strip()
+        if name:
+            try:
+                w = float(weight)
+            except ValueError:
+                w = 1.0
+            loras.append({"name": name, "model_strength": w, "clip_strength": w})
+
     return {
         "prompt": prompt,
         "negative_prompt": negative_prompt,
@@ -196,6 +208,7 @@ def parse_parameters_a1111(raw):
         "model_hash": fields.get("model_hash", ""),
         "model": fields.get("model", ""),
         "version": fields.get("version", ""),
+        "loras": loras,
     }
 
 
@@ -297,6 +310,35 @@ def parse_comfyui_json(raw):
             if node.get("class_type", "") == "CLIPLoader":
                 model_name = node.get("inputs", {}).get("clip_name", "") or model_name
 
+    # Extract LORAs from LoraLoader / LoraLoaderModelOnly nodes
+    loras = []
+    for node in wf.values():
+        if not isinstance(node, dict):
+            continue
+        ct = node.get("class_type", "")
+        inp = node.get("inputs", {})
+
+        if ct in ("LoraLoader", "LoraLoaderModelOnly"):
+            name = inp.get("lora_name", "")
+            if name and name != "None":
+                loras.append({
+                    "name": str(name),
+                    "model_strength": float(inp.get("strength_model", 1.0)),
+                    "clip_strength": float(inp.get("strength_clip", 1.0)),
+                })
+
+        if ct == "Lora Loader Stack (rgthree)":
+            for i in (1, 2, 3, 4):
+                si = f"0{i}"
+                name = inp.get(f"lora_{si}", "")
+                strength = float(inp.get(f"strength_{si}", 1.0))
+                if name and name != "None":
+                    loras.append({
+                        "name": str(name),
+                        "model_strength": strength,
+                        "clip_strength": strength,
+                    })
+
     if not pos_prompt and not neg_prompt:
         return None
 
@@ -311,6 +353,7 @@ def parse_comfyui_json(raw):
         "size": "",
         "model_hash": "",
         "version": "",
+        "loras": loras,
     }
 
 
@@ -391,6 +434,7 @@ def parse_novelai(chunks):
         "size": "",
         "model_hash": "",
         "version": "",
+        "loras": [],
     }
 
 
@@ -400,15 +444,15 @@ def extract_metadata(filepath):
     if not chunks:
         return empty_metadata()
 
-    # Format 1: A1111 parameters
-    if "parameters" in chunks:
-        return parse_parameters_a1111(chunks["parameters"])
-
-    # Format 2: ComfyUI prompt JSON
+    # Format 1: ComfyUI prompt JSON (preferred, has full workflow including LORAs)
     if "prompt" in chunks and chunks["prompt"].strip().startswith("{"):
         result = parse_comfyui_json(chunks["prompt"])
         if result and (result["prompt"] or result["negative_prompt"]):
             return result
+
+    # Format 2: A1111 parameters
+    if "parameters" in chunks:
+        return parse_parameters_a1111(chunks["parameters"])
 
     # Format 3: NovelAI (Description/Comment/Source)
     if "Description" in chunks or "Comment" in chunks:
@@ -423,6 +467,7 @@ def extract_metadata(filepath):
                 "model": chunks.get("Source", chunks.get("Software", "")),
                 "steps": "", "sampler": "", "cfg_scale": "",
                 "seed": "", "size": "", "model_hash": "", "version": "",
+                "loras": [],
             }
 
     return empty_metadata()
@@ -433,6 +478,7 @@ def empty_metadata():
         "prompt": "", "negative_prompt": "",
         "model": "", "steps": "", "sampler": "", "cfg_scale": "",
         "seed": "", "size": "", "model_hash": "", "version": "",
+        "loras": [],
     }
 
 
@@ -475,6 +521,7 @@ def scan_collection(root, index_path):
                 "model_hash": parsed["model_hash"],
                 "model": parsed["model"],
                 "version": parsed["version"],
+                "loras": parsed.get("loras", []),
             })
 
             scanned += 1
