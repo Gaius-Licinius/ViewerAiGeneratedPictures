@@ -697,6 +697,27 @@ class App {
     }
     html += '</div>';
 
+    const loras = info.loras || [];
+    if (loras.length > 0) {
+      html += '<h3>LORAs</h3><div class="detail-loras">';
+      for (const lora of loras) {
+        const name = lora.name || '';
+        const displayName = name.replace(/\.safetensors$/i, '').replace(/\.pt$/i, '').replace(/\.ckpt$/i, '');
+        const mw = parseFloat(lora.model_strength);
+        const cw = parseFloat(lora.clip_strength);
+        const disabled = mw === 0 && cw === 0;
+        const cls = disabled ? 'detail-lora-badge disabled' : 'detail-lora-badge';
+        let strengthText;
+        if (mw === cw) {
+          strengthText = mw.toFixed(2);
+        } else {
+          strengthText = `M:${mw.toFixed(2)} C:${cw.toFixed(2)}`;
+        }
+        html += `<span class="${cls}"><span class="lora-name">${this.escHtml(displayName)}</span> <span class="lora-strength">${this.escHtml(strengthText)}</span></span>`;
+      }
+      html += '</div>';
+    }
+
     content.innerHTML = html;
     popup.classList.remove('hidden');
 
