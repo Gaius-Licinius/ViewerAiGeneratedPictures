@@ -15,6 +15,21 @@ A local web-based viewer for AI-generated images with metadata extraction and ze
 - Browser fullscreen toggle (F key or toolbar button)
 - Accessible on local network
 
+## Mobile access
+
+The viewer is responsive and works on phones and tablets. Connect a device on the same local network:
+
+1. Launch the server on your PC as usual
+2. Check the console output for the network URL (e.g. `http://192.168.1.42:8080`)
+3. Open that URL in your phone's browser
+
+**Touch gestures:**
+- **Tap** — toggle controls visibility
+- **Double-tap** — zoom in/out
+- **Pinch** — zoom in/out
+- **Swipe left/right** — navigate between images in fullscreen
+- On Android, use "Add to home screen" for an app-like experience
+
 ## Usage
 
 ### Quick launch (Windows)
