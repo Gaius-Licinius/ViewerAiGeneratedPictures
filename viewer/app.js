@@ -875,6 +875,10 @@ class App {
       html += '</div>';
     }
 
+    if (!('ontouchstart' in window)) {
+      html += `<div class="explorer-link"><button class="explorer-btn" data-path="${this.escHtml(info.rel_path)}">&#128194; Show in folder</button></div>`;
+    }
+
     content.innerHTML = html;
     popup.classList.remove('hidden');
 
@@ -887,6 +891,18 @@ class App {
     content.querySelectorAll('.copy-btn-inline').forEach((btn) => {
       btn.addEventListener('click', () => this.copyToClipboard(btn.dataset.copy, btn));
     });
+
+    const explorerBtn = content.querySelector('.explorer-btn');
+    if (explorerBtn) {
+      explorerBtn.addEventListener('click', () => {
+        const relPath = explorerBtn.dataset.path;
+        fetch(`/open-folder/${relPath}`);
+        explorerBtn.textContent = '\u2705 Opened';
+        setTimeout(() => {
+          explorerBtn.innerHTML = '&#128194; Show in folder';
+        }, 2000);
+      });
+    }
   }
 
   copyToClipboard(text, btn) {

@@ -631,6 +631,22 @@ body {
   text-decoration: line-through;
 }
 
+.explorer-link {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.explorer-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
 /* ── Slideshow speed select ── */
 .ss-speed-select {
   min-width: auto;
@@ -1086,5 +1102,10 @@ body {
   .ss-pause-btn:hover {
     background: rgba(0, 0, 0, 0.75);
     transform: scale(1.1);
+  }
+
+  .explorer-btn:hover {
+    background: var(--glass-hover);
+    border-color: var(--accent);
   }
 }
