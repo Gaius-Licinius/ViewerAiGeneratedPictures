@@ -994,17 +994,22 @@ class App {
   /* ── Auto-hide controls ── */
   setupAutoHide() {
     const controls = document.getElementById('controls');
+    const isTouch = 'ontouchstart' in window;
+
     const showControls = () => {
       controls.classList.remove('hidden');
       clearTimeout(this.hideTimer);
-      this.hideTimer = setTimeout(() => {
-        controls.classList.add('hidden');
-      }, 3000);
+      if (!isTouch) {
+        this.hideTimer = setTimeout(() => {
+          controls.classList.add('hidden');
+        }, 3000);
+      }
     };
 
     document.addEventListener('mousemove', showControls);
     document.addEventListener('click', showControls);
     document.addEventListener('keydown', showControls);
+    document.addEventListener('touchstart', showControls);
     showControls();
   }
 
