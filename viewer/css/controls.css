@@ -1,0 +1,132 @@
+/* ── Controls overlay ── */
+#controls {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 600px;
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+#controls.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+.controls-top {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.controls-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.glass-input:focus {
+  border-color: var(--accent);
+}
+
+#search {
+  flex: 1;
+  min-width: 200px;
+  color: var(--text);
+}
+
+#model-filter {
+  min-width: 160px;
+  color: var(--text);
+}
+
+#model-filter option {
+  color: #111;
+  background: #fff;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggle-label input {
+  accent-color: var(--accent);
+}
+
+#image-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.view-modes {
+  display: flex;
+  gap: 4px;
+}
+
+.mode-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all var(--transition);
+}
+
+.mode-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rescan-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all var(--transition);
+  line-height: 1;
+}
+
+.rescan-btn.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+.mode-btn img,
+.rescan-btn img {
+  filter: invert(1);
+  opacity: 0.5;
+  vertical-align: middle;
+  transition: opacity var(--transition);
+}
+
+.mode-btn.active img {
+  opacity: 1;
+}

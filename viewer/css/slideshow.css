@@ -1,0 +1,96 @@
+/* ── Slideshow speed select ── */
+.ss-speed-select {
+  color: var(--text);
+  min-width: auto;
+  width: 56px;
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.ss-speed-select option {
+  color: #111;
+  background: #fff;
+}
+
+/* ── Slideshow button states ── */
+#fs-slideshow.active {
+  color: var(--accent);
+}
+
+#fs-shuffle.active {
+  color: var(--accent);
+  background: rgba(99, 102, 241, 0.15);
+}
+
+/* ── Kiosk mode ── */
+.kiosk-mode .fullscreen-top {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kiosk-mode .filmstrip {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Kiosk controls ── */
+.kiosk-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 215;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.kiosk-controls.visible {
+  opacity: 1;
+}
+
+.kiosk-controls.fading {
+  opacity: 0;
+}
+
+.ss-pause-btn {
+  position: absolute;
+  bottom: 28px;
+  right: 24px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  pointer-events: auto;
+  transition: background var(--transition), transform var(--transition), opacity var(--transition);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Progress bar ── */
+.ss-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.ss-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.1s linear;
+}

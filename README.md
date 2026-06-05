@@ -56,4 +56,20 @@ Open `http://localhost:8080` in your browser.
 
 ## Configuration
 
-Edit `viewer/config.json` to change the collection path and NSFW keywords.
+Edit `viewer/config/config.json` to change the collection path and NSFW keywords.
+
+## Project structure
+
+```
+viewer/
+  server.py           Entry point — starts the HTTP server
+  index.html          Web entry point
+  manifest.json       PWA manifest
+  index.json          Generated image metadata index (gitignored)
+  config/             Configuration
+  core/               Server utilities (scanner, thumbnails)
+  parsers/            PNG metadata parsers (A1111, ComfyUI, NovelAI)
+  js/                 Frontend ES modules
+  css/                Stylesheets per component
+  icons/              SVG icons + Windows icon
+```
