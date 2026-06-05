@@ -7,7 +7,7 @@ export class ImageStore {
 
   async loadConfig() {
     try {
-      const res = await fetch('config.json?t=' + Date.now());
+      const res = await fetch('config/config.json?t=' + Date.now());
       const cfg = await res.json();
       this.app.nsfwKeywords = cfg.nsfw_keywords || [];
     } catch (err) {
@@ -103,6 +103,6 @@ export class ImageStore {
 
   onFilterChange() {
     this.applyFilters();
-    this.app.setMode(this.app.currentMode);
+    this.app.controls.setMode(this.app.currentMode);
   }
 }
