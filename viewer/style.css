@@ -184,6 +184,10 @@ body {
   color: var(--accent);
 }
 
+#btn-wall {
+  font-size: 18px;
+}
+
 .rescan-btn {
   background: none;
   border: 1px solid transparent;
@@ -781,6 +785,10 @@ body {
     padding: 6px 10px;
   }
 
+  #btn-wall {
+    font-size: 20px;
+  }
+
   .rescan-btn {
     font-size: 18px;
     padding: 6px 10px;
@@ -952,6 +960,10 @@ body {
   .mode-btn {
     font-size: 15px;
     padding: 5px 8px;
+  }
+
+  #btn-wall {
+    font-size: 18px;
   }
 
   .rescan-btn {
