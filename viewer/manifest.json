@@ -8,7 +8,7 @@
   "description": "Browse AI-generated images with metadata extraction",
   "icons": [
     {
-      "src": "/icon.ico",
+      "src": "/icons/icon.ico",
       "sizes": "64x64 32x32 48x48",
       "type": "image/x-icon"
     }

@@ -3,8 +3,9 @@ import os
 import socket
 
 COLLECTION_ROOT = None
-VIEWER_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_FILE = os.path.join(VIEWER_DIR, "config.json")
+CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
+VIEWER_DIR = os.path.dirname(CONFIG_DIR)
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 INDEX_FILE = os.path.join(VIEWER_DIR, "index.json")
 PORT = 8080
 HOST = "0.0.0.0"

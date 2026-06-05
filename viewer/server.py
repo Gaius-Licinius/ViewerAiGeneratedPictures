@@ -9,8 +9,8 @@ import urllib.parse
 import socketserver
 
 import config
-from scanner import scan_collection, index_needs_update
-from thumbnails import ThumbnailGenerator
+from core.scanner import scan_collection, index_needs_update
+from core.thumbnails import ThumbnailGenerator
 
 thumbnail_gen = ThumbnailGenerator(None)
 
