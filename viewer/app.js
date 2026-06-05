@@ -31,6 +31,15 @@ class App {
     this.panOffsetStartX = 0;
     this.panOffsetStartY = 0;
     this.zoomBadgeTimer = null;
+    this.touchStartX = 0;
+    this.touchStartY = 0;
+    this.touchStartTime = 0;
+    this.touchStartZoom = 1;
+    this.touchMoved = false;
+    this.pinchStartDist = 0;
+    this.pinchStartZoom = 1;
+    this.lastTapTime = 0;
+    this.csVisible = true;
 
     this.init();
   }
@@ -637,6 +646,154 @@ class App {
     document.body.style.cursor = '';
   }
 
+  /* ── Touch gestures ── */
+  handleTouchStart(e) {
+    if (this.fsIndex < 0) return;
+    const touches = e.touches;
+    if (touches.length === 1) {
+      this.touchStartX = touches[0].clientX;
+      this.touchStartY = touches[0].clientY;
+      this.touchStartTime = Date.now();
+      this.touchMoved = false;
+      this.panOffsetStartX = this.offsetX;
+      this.panOffsetStartY = this.offsetY;
+    }
+    if (touches.length === 2) {
+      this.pinchStartDist = this.getTouchDistance(touches);
+      this.pinchStartZoom = this.zoomLevel;
+      this.touchStartX = (touches[0].clientX + touches[1].clientX) / 2;
+      this.touchStartY = (touches[0].clientY + touches[1].clientY) / 2;
+    }
+  }
+
+  handleTouchMove(e) {
+    if (this.fsIndex < 0) return;
+    const touches = e.touches;
+
+    if (touches.length === 1 && this.zoomLevel > 1.01) {
+      const dx = (touches[0].clientX - this.touchStartX) / this.zoomLevel;
+      const dy = (touches[0].clientY - this.touchStartY) / this.zoomLevel;
+      this.offsetX = this.panOffsetStartX + dx;
+      this.offsetY = this.panOffsetStartY + dy;
+      this.applyZoomTransform();
+      if (Math.abs(touches[0].clientX - this.touchStartX) > 10 ||
+          Math.abs(touches[0].clientY - this.touchStartY) > 10) {
+        this.touchMoved = true;
+      }
+      return;
+    }
+
+    if (touches.length === 1 && this.zoomLevel <= 1.01) {
+      if (Math.abs(touches[0].clientX - this.touchStartX) > 5 ||
+          Math.abs(touches[0].clientY - this.touchStartY) > 5) {
+        this.touchMoved = true;
+      }
+      return;
+    }
+
+    if (touches.length === 2) {
+      e.preventDefault();
+      this.touchMoved = true;
+      const dist = this.getTouchDistance(touches);
+      const ratio = dist / this.pinchStartDist;
+      let newZoom = this.pinchStartZoom * ratio;
+      newZoom = Math.min(5, Math.max(1, newZoom));
+
+      const cx = (touches[0].clientX + touches[1].clientX) / 2;
+      const cy = (touches[0].clientY + touches[1].clientY) / 2;
+      const img = document.getElementById('fs-image');
+      const container = document.getElementById('fs-zoom-container');
+      if (img && container) {
+        const cRect = container.getBoundingClientRect();
+        const iRect = img.getBoundingClientRect();
+        const dx = cx - (iRect.left + iRect.width / 2);
+        const dy = cy - (iRect.top + iRect.height / 2);
+        const r = newZoom / this.zoomLevel;
+        this.offsetX = this.offsetX - dx * (r - 1) / newZoom;
+        this.offsetY = this.offsetY - dy * (r - 1) / newZoom;
+      }
+
+      this.zoomLevel = newZoom;
+      if (newZoom <= 1.01) {
+        this.offsetX = 0;
+        this.offsetY = 0;
+      }
+      this.applyZoomTransform();
+      this.showZoomBadge();
+    }
+  }
+
+  handleTouchEnd(e) {
+    if (this.fsIndex < 0) return;
+
+    if (!this.touchMoved && e.changedTouches.length === 1) {
+      const now = Date.now();
+      if (now - this.lastTapTime < 300) {
+        this.handleTouchDoubleTap(e.changedTouches[0]);
+        this.lastTapTime = 0;
+        return;
+      }
+      this.lastTapTime = now;
+      this.handleTouchSingleTap(e.changedTouches[0]);
+      return;
+    }
+
+    if (this.touchMoved && e.touches.length === 0 && this.zoomLevel <= 1.01) {
+      const dx = e.changedTouches[0].clientX - this.touchStartX;
+      const dy = e.changedTouches[0].clientY - this.touchStartY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+        if (dx < 0) this.navigateFullscreen(1);
+        else this.navigateFullscreen(-1);
+      }
+    }
+
+    if (this.zoomLevel > 1.01 && e.touches.length === 0) {
+      this.panOffsetStartX = this.offsetX;
+      this.panOffsetStartY = this.offsetY;
+    }
+  }
+
+  handleTouchDoubleTap(touch) {
+    if (this.zoomLevel > 1.01) {
+      this.resetZoom();
+    } else {
+      const img = document.getElementById('fs-image');
+      img.classList.add('smooth-zoom');
+      this.zoomLevel = 2;
+      this.offsetX = 0;
+      this.offsetY = 0;
+      this.applyZoomTransform();
+      setTimeout(() => img.classList.remove('smooth-zoom'), 310);
+      this.showZoomBadge();
+    }
+    if (this.slideshowActive && !this.slideshowPaused) {
+      this.toggleSlideshowPause();
+    }
+  }
+
+  handleTouchSingleTap(touch) {
+    const overlay = document.getElementById('fullscreen-overlay');
+    const popup = document.getElementById('details-popup');
+    if (popup && !popup.classList.contains('hidden')) return;
+    if (this.slideshowActive) {
+      this.showKioskControls();
+      clearTimeout(this.kioskHideTimer);
+      this.kioskHideTimer = setTimeout(() => this.hideKioskControls(), 3000);
+    } else {
+      this.csVisible = !this.csVisible;
+      const top = overlay.querySelector('.fullscreen-top');
+      const filmstrip = document.getElementById('filmstrip');
+      if (top) top.style.opacity = this.csVisible ? '' : '0';
+      if (filmstrip) filmstrip.style.opacity = this.csVisible ? '' : '0';
+    }
+  }
+
+  getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   updateFullscreen() {
     const img = this.filteredImages[this.fsIndex];
     if (!img) return;
@@ -967,6 +1124,12 @@ class App {
     zoomContainer.addEventListener('mousedown', (e) => this.handleZoomMouseDown(e));
     document.addEventListener('mousemove', (e) => this.handleZoomMouseMove(e));
     document.addEventListener('mouseup', () => this.handleZoomMouseUp());
+
+    // Touch gestures
+    zoomContainer.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
+    zoomContainer.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
+    zoomContainer.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+    zoomContainer.addEventListener('touchcancel', (e) => this.handleTouchEnd(e));
   }
 }
 

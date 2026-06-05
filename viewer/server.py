@@ -6,6 +6,7 @@ import json
 import struct
 import os
 import pathlib
+import socket
 import urllib.parse
 import socketserver
 
@@ -25,6 +26,18 @@ def load_config():
         COLLECTION_ROOT = cfg.get("collection_root", r"C:\IA\Collection")
     except Exception:
         COLLECTION_ROOT = r"C:\IA\Collection"
+
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0)
+        s.connect(("10.254.254.254", 1))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return None
 
 
 class ViewerHandler(http.server.SimpleHTTPRequestHandler):
@@ -593,6 +606,9 @@ def main():
     server = ThreadingHTTPServer((HOST, PORT), ViewerHandler)
     local_ip = f"http://localhost:{PORT}"
     print(f"\n  Viewer running at {local_ip}")
+    net_ip = get_local_ip()
+    if net_ip:
+        print(f"  Mobile / network: http://{net_ip}:{PORT}")
     print("  Press Ctrl+C to stop.\n")
 
     try:
