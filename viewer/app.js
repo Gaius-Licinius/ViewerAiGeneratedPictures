@@ -1024,7 +1024,11 @@ class App {
     document.getElementById('btn-grid').addEventListener('click', () => this.setMode('grid'));
     document.getElementById('btn-fullscreen').addEventListener('click', () => this.toggleBrowserFullscreen());
 
-    document.getElementById('btn-rescan').addEventListener('click', () => this.rescanCollection());
+    document.getElementById('btn-rescan').addEventListener('click', () => {
+      if (confirm('Rescan the collection? This will reload metadata for all images.')) {
+        this.rescanCollection();
+      }
+    });
 
     document.getElementById('fs-close').addEventListener('click', () => this.closeFullscreen());
     document.getElementById('fs-info').addEventListener('click', () => this.openInfoPopup());
