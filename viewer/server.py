@@ -4,6 +4,7 @@
 import http.server
 import json
 import struct
+import subprocess
 import os
 import pathlib
 import socket
@@ -51,6 +52,8 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
 
         if path == "/rescan":
             self.serve_rescan()
+        elif path.startswith("/open-folder/"):
+            self.serve_open_folder(path)
         elif path.startswith("/images/"):
             self.serve_image(path)
         elif path.startswith("/thumb/"):
@@ -72,6 +75,29 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         body = json.dumps({"ok": True, "count": len(entries)}).encode("utf-8")
         self.wfile.write(body)
+
+    def serve_open_folder(self, path):
+        rel = path[len("/open-folder/"):]
+        safe_path = os.path.normpath(rel)
+        abs_path = os.path.normpath(os.path.join(COLLECTION_ROOT, safe_path))
+        safe_root = os.path.normpath(os.path.abspath(COLLECTION_ROOT))
+
+        if not abs_path.startswith(safe_root):
+            self.send_error(403)
+            return
+
+        if not os.path.isfile(abs_path):
+            self.send_error(404)
+            return
+
+        try:
+            subprocess.Popen(['explorer', '/select,', abs_path])
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"ok": true}')
+        except Exception:
+            self.send_error(500)
 
     def serve_image(self, path):
         rel = path[len("/images/"):]
