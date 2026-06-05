@@ -91,7 +91,7 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         try:
-            subprocess.Popen(['explorer', f'/select,{abs_path}'])
+            subprocess.Popen(f'explorer /select,"{abs_path}"', shell=True)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
