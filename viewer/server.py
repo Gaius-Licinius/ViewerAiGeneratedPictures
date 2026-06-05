@@ -87,16 +87,19 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         if not os.path.isfile(abs_path):
+            print(f"  Open folder: file not found: {abs_path}")
             self.send_error(404)
             return
 
         try:
+            print(f"  Opening folder for: {abs_path}")
             subprocess.Popen(f'explorer /select,"{abs_path}"', shell=True)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(b'{"ok": true}')
-        except Exception:
+        except Exception as exc:
+            print(f"  Open folder error: {exc}")
             self.send_error(500)
 
     def serve_image(self, path):
