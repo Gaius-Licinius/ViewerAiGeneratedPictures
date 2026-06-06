@@ -54,6 +54,10 @@
   opacity: 0;
 }
 
+.ss-pause-btn img {
+  filter: invert(1);
+}
+
 .ss-pause-btn {
   position: absolute;
   bottom: 28px;

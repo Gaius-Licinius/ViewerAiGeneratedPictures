@@ -36,8 +36,10 @@ export class Slideshow {
     this.app.slideshowPaused = !this.app.slideshowPaused;
     if (this.app.slideshowPaused) {
       this._pauseTimer();
+      this._exitKioskMode();
     } else {
       this.app.zoom.reset();
+      this._enterKioskMode();
       this._resumeTimer();
     }
     this.updateUi();
@@ -154,16 +156,18 @@ export class Slideshow {
 
   updateUi() {
     const btn = document.getElementById('fs-slideshow');
-    if (this.app.slideshowActive) {
+    if (this.app.slideshowActive && !this.app.slideshowPaused) {
       btn.classList.add('active');
       btn.innerHTML = '&#9632;';
     } else {
       btn.classList.remove('active');
-      btn.innerHTML = '&#9654;';
+      btn.innerHTML = '<img src="icons/play.svg" width="18" height="18" alt="Play">';
     }
     const pauseBtn = document.getElementById('ss-pause');
     if (pauseBtn) {
-      pauseBtn.innerHTML = this.app.slideshowPaused ? '&#9654;' : '&#9208;';
+      pauseBtn.innerHTML = this.app.slideshowPaused
+        ? '<img src="icons/play.svg" width="24" height="24" alt="Play">'
+        : '<img src="icons/pause.svg" width="24" height="24" alt="Pause">';
     }
     const shuffleBtn = document.getElementById('fs-shuffle');
     if (shuffleBtn) {

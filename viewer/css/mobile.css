@@ -56,8 +56,7 @@
   }
 
   .rescan-btn {
-    font-size: 18px;
-    padding: 6px 10px;
+    display: none;
   }
 
   .wall-container {
@@ -218,11 +217,6 @@
 
   .mode-btn {
     font-size: 15px;
-    padding: 5px 8px;
-  }
-
-  .rescan-btn {
-    font-size: 16px;
     padding: 5px 8px;
   }
 
