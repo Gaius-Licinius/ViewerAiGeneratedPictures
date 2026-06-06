@@ -156,7 +156,7 @@ export class Slideshow {
 
   updateUi() {
     const btn = document.getElementById('fs-slideshow');
-    if (this.app.slideshowActive) {
+    if (this.app.slideshowActive && !this.app.slideshowPaused) {
       btn.classList.add('active');
       btn.innerHTML = '&#9632;';
     } else {
