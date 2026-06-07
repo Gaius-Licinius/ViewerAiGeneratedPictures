@@ -24,7 +24,6 @@ export class DetailsPopup {
       ['Model Hash', info.model_hash],
       ['Version', info.version],
       ['File', info.rel_path],
-      ['Folder', info.folder],
     ].filter(([, v]) => v);
 
     let html = '<h3>Positive Prompt <span class="copy-btn" title="Copy">&#128203;</span></h3>';
