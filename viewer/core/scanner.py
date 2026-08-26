@@ -2,6 +2,7 @@ import os
 import json
 import pathlib
 from parsers.router import extract_metadata
+from parsers.png_chunks import read_png_dimensions
 
 
 def scan_collection(root, index_path):
@@ -21,6 +22,10 @@ def scan_collection(root, index_path):
 
             parsed = extract_metadata(full_path)
 
+            width, height = read_png_dimensions(full_path)
+            width = str(width) if width is not None else ""
+            height = str(height) if height is not None else ""
+
             prompt_val = parsed["prompt"]
             neg_val = parsed["negative_prompt"]
             if not isinstance(prompt_val, str):
@@ -39,7 +44,8 @@ def scan_collection(root, index_path):
                 "sampler": parsed["sampler"],
                 "cfg_scale": parsed["cfg_scale"],
                 "seed": parsed["seed"],
-                "size": parsed["size"],
+                "width": width,
+                "height": height,
                 "model_hash": parsed["model_hash"],
                 "model": parsed["model"],
                 "version": parsed["version"],
@@ -91,5 +97,27 @@ def index_needs_update(collection_root, index_path):
         print(f"  Count mismatch: {disk_count} PNGs on disk vs {len(entries)} in index, needs update.")
         return True
 
+    if _parser_sources_newer_than(index_mtime):
+        print("  Parser/scanner sources changed, index needs update.")
+        return True
+
     print(f"  Index up to date ({disk_count} images).")
+    return False
+
+
+def _parser_sources_newer_than(index_mtime):
+    """Return True if any parser/scanner source file changed after the index was written."""
+    core_dir = os.path.dirname(os.path.abspath(__file__))
+    viewer_dir = os.path.dirname(core_dir)
+    source_files = [os.path.join(core_dir, "scanner.py")]
+    parsers_dir = os.path.join(viewer_dir, "parsers")
+    if os.path.isdir(parsers_dir):
+        source_files.extend(
+            os.path.join(parsers_dir, name)
+            for name in os.listdir(parsers_dir)
+            if name.endswith(".py")
+        )
+    for path in source_files:
+        if os.path.exists(path) and os.path.getmtime(path) > index_mtime:
+            return True
     return False

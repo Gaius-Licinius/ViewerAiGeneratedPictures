@@ -128,6 +128,25 @@ def parse_workflow(raw):
                         "clip_strength": strength,
                     })
 
+        if ct == "Power Lora Loader (rgthree)":
+            for key, slot in inp.items():
+                if not key.startswith("lora_") or not isinstance(slot, dict):
+                    continue
+                name = slot.get("lora", "")
+                if not name or name == "None":
+                    continue
+                if slot.get("on") is False:
+                    continue
+                try:
+                    strength = float(slot.get("strength", 1.0))
+                except (TypeError, ValueError):
+                    strength = 1.0
+                loras.append({
+                    "name": str(name),
+                    "model_strength": strength,
+                    "clip_strength": strength,
+                })
+
     if not pos_prompt and not neg_prompt:
         return None
 
@@ -146,24 +165,82 @@ def parse_workflow(raw):
     }
 
 
-def _resolve_text_value(wf, value):
-    """Resolve a text value, following node references (e.g. PrimitiveStringMultiline)."""
+_TEXT_KEYS = ("value", "text", "string", "prompt", "seed")
+
+
+def _resolve_text_value(wf, value, depth=0):
+    """Resolve a text value, following node references through arbitrary
+    intermediate nodes (PrimitiveStringMultiline, PreviewAny, ComfySwitchNode,
+    StringConcatenate, etc.)."""
+    if depth > 60:
+        return ""
     if isinstance(value, str):
         return value
-    if isinstance(value, list) and len(value) > 0:
-        ref_node_id = value[0]
-        ref_node = wf.get(ref_node_id)
-        if isinstance(ref_node, dict):
-            inp = ref_node.get("inputs", {})
-            for key in ("value", "text", "prompt", "string", "seed"):
-                v = inp.get(key)
-                if v is not None:
-                    result = _resolve_text_value(wf, v)
-                    if result:
-                        return result
+    if isinstance(value, bool):
+        return ""
     if isinstance(value, (int, float)):
         return str(value)
+    if isinstance(value, list) and len(value) > 0:
+        return _resolve_node(wf, value[0], depth + 1)
     return ""
+
+
+def _resolve_node(wf, node_id, depth=0):
+    """Resolve the text produced by a node, walking its inputs graph."""
+    if depth > 60:
+        return ""
+    node = wf.get(node_id)
+    if not isinstance(node, dict):
+        return ""
+    ct = node.get("class_type", "")
+    inp = node.get("inputs", {})
+
+    # Zeroed-out conditioning means "no prompt" (used as negative by Krea2).
+    if ct == "ConditioningZeroOut":
+        return ""
+
+    # Direct string/number fields win immediately.
+    for key in _TEXT_KEYS:
+        v = inp.get(key)
+        if isinstance(v, str):
+            return v
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            return str(v)
+
+    # Switch nodes: evaluate the boolean switch and follow the chosen branch.
+    if "switch" in inp and ("on_true" in inp or "on_false" in inp):
+        branch = _resolve_bool(wf, inp.get("switch"))
+        target = inp.get("on_true" if branch else "on_false")
+        return _resolve_text_value(wf, target, depth + 1)
+
+    # Pass-through / reference-holding nodes.
+    for key in ("source", "string_a", "string_b", "positive", "negative",
+                "text", "clip", "conditioning", "prompt"):
+        conn = inp.get(key)
+        if isinstance(conn, list) and len(conn) > 0:
+            text = _resolve_text_value(wf, conn, depth + 1)
+            if text:
+                return text
+
+    return ""
+
+
+def _resolve_bool(wf, value, depth=0):
+    """Resolve a boolean value, following node references (PrimitiveBoolean)."""
+    if depth > 30:
+        return False
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, list) and len(value) > 0:
+        node = wf.get(value[0])
+        if isinstance(node, dict):
+            inp = node.get("inputs", {})
+            for key in ("value", "switch", "on", "enable"):
+                if key in inp:
+                    return _resolve_bool(wf, inp.get(key), depth + 1)
+    return False
 
 
 def _resolve_clip_text(wf, node_id):
@@ -175,6 +252,8 @@ def _resolve_clip_text(wf, node_id):
     if ct == "CLIPTextEncode":
         raw = node.get("inputs", {}).get("text", "")
         return _resolve_text_value(wf, raw)
+    if ct == "ConditioningZeroOut":
+        return ""
     for key in ("positive", "text", "clip", "conditioning"):
         conn = node.get("inputs", {}).get(key)
         if isinstance(conn, list) and len(conn) > 0:

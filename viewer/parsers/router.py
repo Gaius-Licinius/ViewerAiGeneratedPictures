@@ -27,6 +27,10 @@ def extract_metadata(filepath):
     # Format 4: Fallback - try any raw text in chunks
     for key in ("Description", "Comment", "Title", "prompt"):
         if key in chunks:
+            value = chunks[key].strip()
+            # Never expose a raw JSON workflow as a prompt.
+            if value.startswith("{") or value.startswith("["):
+                continue
             return {
                 "prompt": chunks[key].strip(),
                 "negative_prompt": "",
