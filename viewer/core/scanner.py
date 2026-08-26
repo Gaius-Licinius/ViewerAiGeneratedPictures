@@ -23,10 +23,8 @@ def scan_collection(root, index_path):
             parsed = extract_metadata(full_path)
 
             width, height = read_png_dimensions(full_path)
-            if width is not None and height is not None:
-                size = f"{width}x{height}"
-            else:
-                size = parsed["size"]
+            width = str(width) if width is not None else ""
+            height = str(height) if height is not None else ""
 
             prompt_val = parsed["prompt"]
             neg_val = parsed["negative_prompt"]
@@ -46,7 +44,8 @@ def scan_collection(root, index_path):
                 "sampler": parsed["sampler"],
                 "cfg_scale": parsed["cfg_scale"],
                 "seed": parsed["seed"],
-                "size": size,
+                "width": width,
+                "height": height,
                 "model_hash": parsed["model_hash"],
                 "model": parsed["model"],
                 "version": parsed["version"],
