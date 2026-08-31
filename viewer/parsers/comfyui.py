@@ -165,7 +165,7 @@ def parse_workflow(raw):
     }
 
 
-_TEXT_KEYS = ("value", "text", "string", "prompt", "seed")
+_TEXT_KEYS = ("value", "text", "string", "prompt", "seed", "user_prompt", "system_prompt")
 
 
 def _resolve_text_value(wf, value, depth=0):
@@ -243,6 +243,17 @@ def _resolve_bool(wf, value, depth=0):
     return False
 
 
+def _resolve_lumina2_prompt(wf, node):
+    """Extract the combined system + user prompt from a Lumina2 text encoder."""
+    inp = node.get("inputs", {})
+    parts = []
+    for key in ("system_prompt", "user_prompt"):
+        value = _resolve_text_value(wf, inp.get(key, ""))
+        if value:
+            parts.append(value)
+    return " ".join(parts)
+
+
 def _resolve_clip_text(wf, node_id):
     """Trace through intermediate nodes to find CLIPTextEncode text."""
     node = wf.get(node_id)
@@ -252,6 +263,8 @@ def _resolve_clip_text(wf, node_id):
     if ct == "CLIPTextEncode":
         raw = node.get("inputs", {}).get("text", "")
         return _resolve_text_value(wf, raw)
+    if ct == "CLIPTextEncodeLumina2":
+        return _resolve_lumina2_prompt(wf, node)
     if ct == "ConditioningZeroOut":
         return ""
     for key in ("positive", "text", "clip", "conditioning"):
