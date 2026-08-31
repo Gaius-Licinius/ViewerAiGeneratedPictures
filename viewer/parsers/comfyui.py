@@ -65,9 +65,9 @@ def parse_workflow(raw):
         steps_val = inputs.get("steps")
         seed_val = inputs.get("seed")
         if cfg_val is not None:
-            cfg = str(cfg_val)
+            cfg = _resolve_sampler_number(wf, cfg_val)
         if steps_val is not None:
-            steps = str(steps_val)
+            steps = _resolve_sampler_number(wf, steps_val)
         if seed_val is not None:
             seed = _resolve_text_value(wf, seed_val) if isinstance(seed_val, list) else str(seed_val)
 
@@ -90,6 +90,8 @@ def parse_workflow(raw):
             model_name = node.get("inputs", {}).get("ckpt_name", "") or model_name
         elif ct == "UNETLoader":
             model_name = node.get("inputs", {}).get("unet_name", "") or model_name
+        elif isinstance(node.get("inputs", {}).get("ckpt_name"), str):
+            model_name = node["inputs"]["ckpt_name"] or model_name
 
     # Fallback: CLIP loader only if no model found yet
     if not model_name:
@@ -182,6 +184,32 @@ def _resolve_text_value(wf, value, depth=0):
         return str(value)
     if isinstance(value, list) and len(value) > 0:
         return _resolve_node(wf, value[0], depth + 1)
+    return ""
+
+
+def _resolve_sampler_number(wf, value, depth=0):
+    """Resolve a numeric KSampler input (steps/cfg), following node references
+    and output slots (e.g. StepsAndCfg where slot 0 is steps and slot 1 is cfg)."""
+    if depth > 60:
+        return ""
+    if isinstance(value, bool):
+        return ""
+    if isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, list) and len(value) > 0:
+        node = wf.get(value[0])
+        slot = value[1] if len(value) > 1 else 0
+        if isinstance(node, dict):
+            inp = node.get("inputs", {})
+            if node.get("class_type", "") == "StepsAndCfg":
+                key = "cfg" if slot == 1 else "steps"
+                if key in inp:
+                    return _resolve_sampler_number(wf, inp[key], depth + 1)
+            for key in ("value", "steps", "cfg", "seed", "float", "int"):
+                if key in inp:
+                    return _resolve_sampler_number(wf, inp[key], depth + 1)
     return ""
 
 
