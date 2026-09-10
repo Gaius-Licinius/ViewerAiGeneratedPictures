@@ -1,5 +1,5 @@
 'use strict';
-import { makeDateSeparator, formatDateLabel } from './utils.js';
+import { makeDateSeparator, formatDateLabel, revealTile, HEART_SVG } from './utils.js';
 
 export class GridView {
   constructor(app) {
@@ -20,8 +20,10 @@ export class GridView {
           const el = entry.target;
           const idx = parseInt(el.dataset.index);
           const img = this.app.filteredImages[idx];
-          if (img && !el.querySelector('img').src) {
-            el.querySelector('img').src = `/thumb/${img.rel_path}`;
+          const imgEl = el.querySelector('img');
+          if (img && imgEl && !imgEl.src) {
+            imgEl.src = `/thumb/${img.rel_path}`;
+            revealTile(el, imgEl);
           }
           this.observer.unobserve(el);
         }
@@ -51,11 +53,10 @@ export class GridView {
 
       const favIcon = document.createElement('span');
       favIcon.className = 'fav-indicator';
-      favIcon.textContent = this.app.favorites.has(img.id) ? '\u2665' : '\u2661';
+      favIcon.innerHTML = HEART_SVG;
       favIcon.addEventListener('click', (e) => {
         e.stopPropagation();
         this.app.store.toggleFavorite(img.id);
-        favIcon.textContent = this.app.favorites.has(img.id) ? '\u2665' : '\u2661';
         item.classList.toggle('favorited', this.app.favorites.has(img.id));
       });
 

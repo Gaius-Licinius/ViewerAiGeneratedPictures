@@ -37,15 +37,25 @@ export class Controls {
     showControls();
   }
 
-  setMode(mode) {
-    this.app.currentMode = mode;
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`btn-${mode}`).classList.add('active');
+  setMode(mode, instant = false) {
+    const apply = () => {
+      this.app.currentMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-${mode}`).classList.add('active');
+      const modes = document.querySelector('.view-modes');
+      if (modes) modes.dataset.mode = mode;
 
-    if (mode === 'wall') {
-      this.app.wall.render();
-    } else if (mode === 'grid') {
-      this.app.grid.render();
+      if (mode === 'wall') {
+        this.app.wall.render();
+      } else if (mode === 'grid') {
+        this.app.grid.render();
+      }
+    };
+
+    if (!instant && document.startViewTransition) {
+      document.startViewTransition(apply);
+    } else {
+      apply();
     }
   }
 

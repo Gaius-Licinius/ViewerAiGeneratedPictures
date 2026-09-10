@@ -1,6 +1,10 @@
 'use strict';
 import { shuffle } from './utils.js';
 
+const ICON_STOP = '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">'
+  + '<path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5"/>'
+  + '</svg>';
+
 export class Slideshow {
   constructor(app) {
     this.app = app;
@@ -158,7 +162,7 @@ export class Slideshow {
     const btn = document.getElementById('fs-slideshow');
     if (this.app.slideshowActive && !this.app.slideshowPaused) {
       btn.classList.add('active');
-      btn.innerHTML = '&#9632;';
+      btn.innerHTML = ICON_STOP;
     } else {
       btn.classList.remove('active');
       btn.innerHTML = '<img src="icons/play.svg" width="18" height="18" alt="Play">';

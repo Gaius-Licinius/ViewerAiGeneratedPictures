@@ -1,9 +1,11 @@
 /* ── Slideshow speed select ── */
 .ss-speed-select {
-  color: var(--text);
+  color: #111;
+  background: rgba(255, 255, 255, 0.88);
+  border-color: transparent;
   min-width: auto;
-  width: 56px;
-  padding: 4px 6px;
+  width: 58px;
+  padding: 6px 8px;
   font-size: 12px;
   text-align: center;
   -webkit-appearance: none;
@@ -17,24 +19,26 @@
 }
 
 /* ── Slideshow button states ── */
-#fs-slideshow.active {
-  color: var(--accent);
-}
-
+#fs-slideshow.active,
 #fs-shuffle.active {
   color: var(--accent);
-  background: rgba(99, 102, 241, 0.15);
+  background: var(--accent-soft);
+  box-shadow: var(--glow);
 }
 
 /* ── Kiosk mode ── */
 .kiosk-mode .fullscreen-top {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
+  transition: opacity 0.5s ease, visibility 0s linear 0.5s;
 }
 
 .kiosk-mode .filmstrip {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
+  transition: opacity 0.5s ease, visibility 0s linear 0.5s;
 }
 
 /* ── Kiosk controls ── */
@@ -52,6 +56,8 @@
 
 .kiosk-controls.fading {
   opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s ease, visibility 0s linear 0.6s;
 }
 
 .ss-pause-btn img {
@@ -62,12 +68,12 @@
   position: absolute;
   bottom: 28px;
   right: 24px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  color: rgba(255, 255, 255, 0.8);
+  width: 50px;
+  height: 50px;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 16px;
   cursor: pointer;
   display: inline-flex;
@@ -76,9 +82,10 @@
   line-height: 1;
   padding: 0;
   pointer-events: auto;
-  transition: background var(--transition), transform var(--transition), opacity var(--transition);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md), var(--glass-highlight);
+  transition: background var(--transition), transform var(--transition), opacity var(--transition), box-shadow var(--transition);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 /* ── Progress bar ── */
@@ -87,14 +94,15 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.06);
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
   pointer-events: none;
 }
 
 .ss-progress-fill {
   height: 100%;
   width: 0%;
-  background: var(--accent);
+  background: var(--accent-gradient);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.65);
   transition: width 0.1s linear;
 }

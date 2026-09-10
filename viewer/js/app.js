@@ -61,7 +61,7 @@ export class App {
       this.store.detectNsfw();
       this.store.populateModelFilter();
       this.store.applyFilters();
-      this.controls.setMode(this.currentMode);
+      this.controls.setMode(this.currentMode, true);
       this.controls.bindEvents();
       this.controls.setupAutoHide();
     } catch (err) {
