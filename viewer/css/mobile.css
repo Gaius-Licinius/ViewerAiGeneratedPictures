@@ -9,36 +9,43 @@
     left: 8px;
     right: 8px;
     transform: none;
-    padding: 10px 14px;
+    padding: 10px 12px;
     gap: 8px;
-    border-radius: 10px;
+    border-radius: var(--radius);
     top: 8px;
   }
 
   #controls.hidden {
-    transform: translateY(-10px);
+    transform: translateY(-12px);
   }
 
   .controls-top {
-    gap: 6px;
+    gap: 8px;
+  }
+
+  .search-field {
+    flex: 1 1 100%;
+    min-width: 0;
   }
 
   #search {
-    min-width: 0;
     font-size: 14px;
-    padding: 8px 10px;
+    padding: 8px 12px 8px 34px;
+  }
+
+  .search-field .search-icon {
+    left: 12px;
   }
 
   #model-filter {
     min-width: 0;
     font-size: 13px;
-    padding: 8px 6px;
-    max-width: 130px;
+    padding: 8px 10px;
+    max-width: 140px;
   }
 
-  .toggle-label {
+  .switch-label {
     font-size: 12px;
-    gap: 3px;
   }
 
   .controls-bottom {
@@ -46,13 +53,27 @@
     gap: 6px;
   }
 
-  #image-count {
+  .count-pill {
     font-size: 11px;
+    padding: 4px 9px;
   }
 
   .mode-btn {
-    font-size: 16px;
-    padding: 6px 10px;
+    width: 40px;
+    height: 34px;
+  }
+
+  .view-modes::before {
+    width: 40px;
+  }
+
+  .view-modes[data-mode="grid"]::before {
+    transform: translateX(42px);
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
   }
 
   .rescan-btn {
@@ -62,7 +83,7 @@
   .wall-container {
     column-width: auto;
     column-gap: 0;
-    padding: 100px 8px 16px;
+    padding: 148px 8px 16px;
   }
 
   .wall-item {
@@ -70,40 +91,43 @@
     margin-bottom: 8px;
   }
 
-  .wall-item:hover {
-    transform: none;
-  }
-
-  .wall-item .fav-indicator {
-    font-size: 22px;
-    opacity: 0.7;
-    top: 10px;
-    right: 10px;
-  }
-
   .grid-container {
-    gap: 6px;
-    padding: 100px 6px 16px;
+    gap: 8px;
+    padding: 148px 8px 16px;
   }
 
   .grid-item {
-    width: calc(33.33% - 4px);
+    width: calc(33.33% - 6px);
     height: auto;
     aspect-ratio: 1;
-    border-radius: 6px;
+    border-radius: 10px;
+  }
+
+  .fav-indicator {
+    width: 34px;
+    height: 34px;
+    top: 8px;
+    right: 8px;
+    opacity: 0.8;
+    visibility: visible;
+    transform: none;
   }
 
   .grid-item .fav-indicator {
-    font-size: 16px;
-    opacity: 0.7;
-    top: 4px;
-    right: 4px;
+    width: 28px;
+    height: 28px;
+    top: 5px;
+    right: 5px;
   }
 
   .date-separator {
-    font-size: 28px;
-    padding: 16px 6px 8px;
-    letter-spacing: 2px;
+    font-size: 20px;
+    padding: 14px 8px 10px;
+    letter-spacing: 3px;
+  }
+
+  .date-separator::before {
+    height: 18px;
   }
 
   .fullscreen-top {
@@ -112,40 +136,45 @@
     left: 8px;
     justify-content: center;
     gap: 2px;
-    padding: 4px 6px;
-    border-radius: 10px;
+    padding: 5px;
+    border-radius: var(--radius);
   }
 
   .fs-icon-btn {
-    font-size: 24px;
-    padding: 6px 10px;
+    width: 40px;
+    height: 40px;
   }
 
   .ss-speed-select {
     font-size: 13px;
-    width: 52px;
-    padding: 6px 4px;
+    width: 54px;
+    padding: 7px 4px;
   }
 
   .filmstrip {
-    height: 80px;
+    height: 82px;
     padding: 8px 10px;
   }
 
   .filmstrip-thumb {
-    height: 60px;
-    width: 60px;
+    height: 62px;
+    width: 62px;
+    border-radius: 8px;
   }
 
   .details-card {
-    padding: 18px;
-    max-height: 85vh;
-    border-radius: 10px;
+    padding: 20px 16px;
+    border-radius: var(--radius);
+    max-height: 86vh;
+  }
+
+  .details-title {
+    font-size: 15px;
   }
 
   .details-card h3 {
-    font-size: 12px;
-    margin: 18px 0 4px 0;
+    font-size: 10px;
+    margin: 20px 0 6px 0;
   }
 
   .details-card .detail-prompt {
@@ -153,25 +182,22 @@
   }
 
   .details-card .detail-neg {
-    font-size: 12px;
+    font-size: 12.5px;
   }
 
   .details-card .detail-grid {
     font-size: 12px;
-    gap: 4px 8px;
+    gap: 6px 10px;
+    padding: 10px 12px;
+  }
+
+  .details-card .detail-loras {
+    grid-template-columns: 1fr;
   }
 
   .details-card .detail-lora-badge {
     font-size: 12px;
-    padding: 3px 8px;
-  }
-
-  .details-card .detail-lora-badge .lora-name {
-    max-width: 140px;
-  }
-
-  .details-card .detail-lora-badge .lora-strength {
-    font-size: 10px;
+    padding: 8px 10px;
   }
 
   .ss-pause-btn {
@@ -179,11 +205,10 @@
     height: 56px;
     bottom: 20px;
     right: 16px;
-    font-size: 20px;
   }
 
   .zoom-badge {
-    bottom: 90px;
+    bottom: 96px;
     font-size: 11px;
   }
 }
@@ -193,76 +218,82 @@
   #controls {
     padding: 8px 10px;
     gap: 6px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
   }
 
   #search {
     font-size: 13px;
-    padding: 7px 8px;
+    padding: 7px 10px 7px 32px;
   }
 
   #model-filter {
-    max-width: 110px;
+    max-width: 118px;
     font-size: 12px;
-    padding: 7px 4px;
+    padding: 7px 8px;
   }
 
-  .toggle-label {
+  .switch-label {
     font-size: 11px;
   }
 
-  .toggle-label span {
+  .count-pill {
     font-size: 10px;
   }
 
   .mode-btn {
-    font-size: 15px;
-    padding: 5px 8px;
+    width: 38px;
+    height: 32px;
+  }
+
+  .view-modes::before {
+    width: 38px;
+  }
+
+  .view-modes[data-mode="grid"]::before {
+    transform: translateX(40px);
   }
 
   .wall-container {
-    padding: 90px 4px 12px;
+    padding: 138px 4px 12px;
   }
 
   .grid-container {
-    gap: 4px;
-    padding: 90px 4px 12px;
+    gap: 6px;
+    padding: 138px 4px 12px;
   }
 
   .grid-item {
-    width: calc(50% - 2px);
+    width: calc(50% - 3px);
   }
 
   .fullscreen-top {
     gap: 0;
-    padding: 3px 4px;
+    padding: 4px;
   }
 
   .fs-icon-btn {
-    font-size: 22px;
-    padding: 5px 8px;
+    width: 36px;
+    height: 36px;
   }
 
   .ss-speed-select {
-    width: 46px;
+    width: 48px;
     font-size: 12px;
-    padding: 5px 2px;
+    padding: 6px 2px;
   }
 
   .filmstrip {
-    height: 68px;
+    height: 70px;
     padding: 6px 8px;
   }
 
   .filmstrip-thumb {
-    height: 50px;
-    width: 50px;
+    height: 52px;
+    width: 52px;
   }
 
   .details-card {
-    padding: 14px;
-    width: 94%;
-    max-height: 88vh;
+    padding: 18px 14px;
   }
 
   .details-card .detail-grid {
@@ -275,38 +306,24 @@
     height: 48px;
     bottom: 14px;
     right: 12px;
-    font-size: 18px;
   }
 
   .zoom-badge {
-    bottom: 78px;
+    bottom: 82px;
     font-size: 10px;
   }
 }
 
 /* ── Only apply hover effects on devices that support hover ── */
 @media (hover: hover) {
-  .wall-item:hover {
-    transform: scale(1.03);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    z-index: 2;
-  }
-
-  .wall-item:hover .fav-indicator {
-    opacity: 1;
-  }
-
-  .grid-item:hover {
-    transform: scale(1.05);
-    z-index: 2;
-  }
-
+  .wall-item:hover .fav-indicator,
   .grid-item:hover .fav-indicator {
     opacity: 1;
   }
 
   .filmstrip-thumb:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
+    opacity: 1;
   }
 
   .fs-icon-btn:hover {
@@ -317,28 +334,20 @@
     background: var(--glass-hover);
   }
 
-  .rescan-btn:hover {
+  .mode-btn:hover img {
+    opacity: 0.85;
+  }
+
+  .icon-btn:hover {
     background: var(--glass-hover);
-    color: var(--text);
   }
 
-  .copy-btn:hover {
+  .icon-btn:hover img {
     opacity: 1;
-    color: var(--accent);
-  }
-
-  .copy-btn-inline:hover {
-    opacity: 1;
-    color: var(--accent);
   }
 
   .ss-pause-btn:hover {
-    background: rgba(0, 0, 0, 0.75);
-    transform: scale(1.1);
-  }
-
-  .explorer-btn:hover {
-    background: var(--glass-hover);
-    border-color: var(--accent);
+    transform: scale(1.08);
+    box-shadow: var(--shadow-lg), var(--glass-highlight);
   }
 }

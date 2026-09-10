@@ -1,5 +1,5 @@
 'use strict';
-import { shuffle, makeDateSeparator, formatDateLabel } from './utils.js';
+import { shuffle, revealTile, HEART_SVG } from './utils.js';
 
 export class WallView {
   constructor(app) {
@@ -33,16 +33,16 @@ export class WallView {
 
       const favIcon = document.createElement('span');
       favIcon.className = 'fav-indicator';
-      favIcon.textContent = this.app.favorites.has(img.id) ? '\u2665' : '\u2661';
+      favIcon.innerHTML = HEART_SVG;
       favIcon.addEventListener('click', (e) => {
         e.stopPropagation();
         this.app.store.toggleFavorite(img.id);
-        favIcon.textContent = this.app.favorites.has(img.id) ? '\u2665' : '\u2661';
         item.classList.toggle('favorited', this.app.favorites.has(img.id));
       });
 
       item.appendChild(imgEl);
       item.appendChild(favIcon);
+      revealTile(item, imgEl);
       const origIndex = this.app.filteredImages.indexOf(img);
       item.addEventListener('click', () => this.app.fullscreen.open(origIndex));
       frag.appendChild(item);
